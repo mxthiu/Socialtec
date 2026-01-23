@@ -1,0 +1,42 @@
+{
+  "mathias": {
+    "nombre": "Mathias",
+    "apellido": "Calvo",
+    "usuario": "mathias",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$ZMwZo/R+TwnB2LuXMuY8hw$vcwlvuLWHq5F+JPmL+As7a/jAJNwrdKNWhkxazJ5Oek",
+    "email": "praraora@gmail.com",
+    "foto": "C:/Users/Administrator/Pictures/Wallpaper 2.jpg",
+    "amigos": [
+      "luisi"
+    ]
+  },
+  "ana_lopez": {
+    "nombre": "Ana",
+    "apellido": "López",
+    "usuario": "ana_lopez",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$SSllDCEkpPReCyFkLOV87w$vl9mOb6R6M0h6n+ol6ZjQ1VeAN5XOoecjZn0UsQLFE4",
+    "email": "ana.lopez@example.com",
+    "foto": null,
+    "amigos": []
+  },
+  "juanp": {
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "usuario": "juanp",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$BQBAiHEuBWCMcY5xbm2tNQ$anhZJuE6TSup+nOrV/C9haXMdz7I37qNP68tvLFm+ks",
+    "email": "juan.perez@example.com",
+    "foto": null,
+    "amigos": []
+  },
+  "luisi": {
+    "nombre": "Luisa",
+    "apellido": "Castillo",
+    "usuario": "luisi",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$/P//3zsnhBDCmNP6HwMgRA$UujIPU1nBku+F2vqRZpUnWrthUMbHZPodhD5eNwDrW0",
+    "email": "ashserey@gmail.com",
+    "foto": null,
+    "amigos": [
+      "mathias"
+    ]
+  }
+}

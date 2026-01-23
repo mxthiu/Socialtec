@@ -55,6 +55,13 @@ class VentanaLogin(QMainWindow):
         self.btn_login.clicked.connect(self.iniciar_sesion)
         layout_principal.addWidget(self.btn_login)
         
+        # ===== LINK OLVIDÉ CONTRASEÑA =====
+        btn_olvide = QPushButton("¿Olvidé mi contraseña?")
+        btn_olvide.setStyleSheet(ESTILO_BOTON_TEXTO)
+        btn_olvide.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_olvide.clicked.connect(self.recuperar_password)
+        layout_principal.addWidget(btn_olvide)
+        
         # ===== LINK A REGISTRO =====
         layout_registro = QHBoxLayout()
         layout_registro.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -149,22 +156,31 @@ class VentanaLogin(QMainWindow):
             self.mostrar_mensaje("La contraseña debe tener al menos 4 caracteres", tipo="error")
             return
         
-        # TODO: Aquí enviarás los datos al servidor
-        print(f"Intentando login con usuario: {usuario}")
+        # Validar con datos locales (MOCK)
+        from cliente.datos_local import validar_login
         
-        # Simulación de login exitoso (por ahora)
         self.mostrar_mensaje("Iniciando sesión...", tipo="exito")
         self.btn_login.setEnabled(False)
         
-        # Simular delay de red
-        QTimer.singleShot(1500, self.login_exitoso)
+        # Validar credenciales
+        exito, datos_usuario = validar_login(usuario, password)
+        
+        if exito:
+            # Guardar datos del usuario
+            self.datos_usuario = datos_usuario
+            QTimer.singleShot(800, self.login_exitoso)
+        else:
+            self.btn_login.setEnabled(True)
+            self.mostrar_mensaje("Usuario o contraseña incorrectos", tipo="error")
     
     def login_exitoso(self):
         """Callback cuando el login es exitoso"""
         self.mostrar_mensaje("¡Login exitoso!", tipo="exito")
-        # TODO: Aquí abrirás la ventana del perfil
-        print("Login exitoso - Abrir ventana de perfil")
-        self.btn_login.setEnabled(True)
+        # Abrir main menu con datos del usuario
+        from cliente.gui_main_menu import VentanaMainMenu
+        self.ventana_main = VentanaMainMenu(self.datos_usuario)
+        self.ventana_main.show()
+        self.close()
     
     def mostrar_mensaje(self, texto, tipo="error"):
         """Muestra un mensaje de error o éxito"""
@@ -182,9 +198,16 @@ class VentanaLogin(QMainWindow):
     
     def ir_a_registro(self):
         """Abre la ventana de registro"""
-        print("Ir a ventana de registro")
-        # TODO: Aquí abrirás la ventana de registro
-        self.mostrar_mensaje("Función de registro próximamente...", tipo="exito")
+        from cliente.gui_registro import VentanaRegistro
+        self.ventana_registro = VentanaRegistro()
+        self.ventana_registro.show()
+        self.close()
+    
+    def recuperar_password(self):
+        """Abre la ventana de recuperación de contraseña"""
+        from cliente.gui_recuperar_password import VentanaRecuperarPassword
+        self.ventana_recuperar = VentanaRecuperarPassword()
+        self.ventana_recuperar.show()
 
 
 # ===== PUNTO DE ENTRADA PARA PRUEBAS =====
