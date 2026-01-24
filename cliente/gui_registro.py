@@ -1,5 +1,3 @@
-# gui_registro.py - Pantalla de registro para SocialTec
-
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QApplication,
@@ -51,16 +49,16 @@ class VentanaRegistro(QMainWindow):
         widget_central.setLayout(layout_ventana)
         layout_ventana.addWidget(scroll)
         
-        # ===== HEADER =====
+        
         self.crear_header(layout_principal)
         
-        # ===== SELECTOR DE FOTO =====
+        
         self.crear_selector_foto(layout_principal)
         
-        # ===== FORMULARIO =====
+        
         self.crear_formulario(layout_principal)
         
-        # ===== MENSAJE DE ERROR/ÉXITO =====
+        
         self.label_mensaje = QLabel("")
         self.label_mensaje.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_mensaje.setStyleSheet(ESTILO_ERROR)
@@ -68,7 +66,7 @@ class VentanaRegistro(QMainWindow):
         self.label_mensaje.setWordWrap(True)
         layout_principal.addWidget(self.label_mensaje)
         
-        # ===== BOTÓN DE REGISTRO =====
+        
         self.btn_registrar = QPushButton("Crear Cuenta")
         self.btn_registrar.setStyleSheet(ESTILO_BOTON_PRIMARIO)
         self.btn_registrar.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -76,7 +74,7 @@ class VentanaRegistro(QMainWindow):
         self.btn_registrar.clicked.connect(self.registrar_usuario)
         layout_principal.addWidget(self.btn_registrar)
         
-        # ===== LINK A LOGIN =====
+        
         layout_login = QHBoxLayout()
         layout_login.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
@@ -300,7 +298,7 @@ class VentanaRegistro(QMainWindow):
             self.mostrar_mensaje("El usuario debe tener al menos 3 caracteres", "error")
             return
         
-        # Validar formato de email
+
         if "@" not in email or "." not in email:
             self.mostrar_mensaje("Por favor ingresa un email válido", "error")
             return
@@ -313,12 +311,6 @@ class VentanaRegistro(QMainWindow):
             self.mostrar_mensaje("Las contraseñas no coinciden", "error")
             return
         
-        # Foto es opcional ahora
-        # if not self.foto_seleccionada:
-        #     self.mostrar_mensaje("Por favor selecciona una foto de perfil", "error")
-        #     return
-        
-        # Registrar usuario localmente (MOCK)
         from cliente.datos_local import registrar_usuario
         
         self.mostrar_mensaje("Creando cuenta...", "exito")
@@ -355,7 +347,7 @@ class VentanaRegistro(QMainWindow):
         self.close()
 
 
-# ===== PRUEBAS =====
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     fuente = QFont("Segoe UI", 10)
@@ -365,3 +357,4 @@ if __name__ == "__main__":
     ventana.show()
     
     sys.exit(app.exec())
+

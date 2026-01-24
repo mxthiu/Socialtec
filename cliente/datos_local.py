@@ -1,10 +1,7 @@
-# datos_local.py - Manejo temporal de datos sin servidor (MOCK)
-
 import json
 import os
 from passlib.hash import argon2
 
-# Archivo donde se guardarán los usuarios temporalmente
 ARCHIVO_USUARIOS = "datos/usuarios_local.json"
 
 
@@ -13,7 +10,6 @@ def inicializar_archivo():
     os.makedirs("datos", exist_ok=True)
     
     if not os.path.exists(ARCHIVO_USUARIOS):
-        # Crear con un usuario de prueba
         usuarios = {
             "mathias": {
                 "nombre": "Mathias",
@@ -76,10 +72,8 @@ def validar_login(usuario, password):
     
     user_data = usuarios[usuario]
     
-    # Verificar contraseña
     try:
         if argon2.verify(password, user_data['password_hash']):
-            # Login exitoso - preparar datos para retornar
             datos_usuario = {
                 "nombre": user_data["nombre"],
                 "apellido": user_data["apellido"],
@@ -102,7 +96,6 @@ def registrar_usuario(nombre, apellido, usuario, password, email, foto_path=None
     """
     usuarios = cargar_usuarios()
     
-    # Verificar si el usuario ya existe
     if usuario in usuarios:
         return False, "El usuario ya existe"
     
@@ -111,7 +104,6 @@ def registrar_usuario(nombre, apellido, usuario, password, email, foto_path=None
         if user_data.get("email") == email:
             return False, "El email ya está en uso"
     
-    # Crear nuevo usuario
     usuarios[usuario] = {
         "nombre": nombre,
         "apellido": apellido,
@@ -199,7 +191,6 @@ def agregar_amigo(usuario_actual, usuario_amigo):
     if usuario_actual not in usuarios or usuario_amigo not in usuarios:
         return False, "Usuario no encontrado"
     
-    # Agregar en ambas direcciones
     if usuario_amigo not in usuarios[usuario_actual]["amigos"]:
         usuarios[usuario_actual]["amigos"].append(usuario_amigo)
     
@@ -220,7 +211,6 @@ def eliminar_amigo(usuario_actual, usuario_amigo):
     if usuario_actual not in usuarios:
         return False, "Usuario no encontrado"
     
-    # Eliminar en ambas direcciones
     if usuario_amigo in usuarios[usuario_actual]["amigos"]:
         usuarios[usuario_actual]["amigos"].remove(usuario_amigo)
     
@@ -287,13 +277,11 @@ def actualizar_perfil(usuario, nombre=None, apellido=None, email=None, foto=None
     if usuario not in usuarios:
         return False, "Usuario no encontrado", None
     
-    # Verificar si el email ya está en uso por otro usuario
     if email:
         for username, user_data in usuarios.items():
             if username != usuario and user_data.get("email") == email:
                 return False, "El email ya está en uso", None
     
-    # Actualizar campos - solo si se proporciona un valor no vacío
     if nombre:
         usuarios[usuario]['nombre'] = nombre
     if apellido:
@@ -303,10 +291,8 @@ def actualizar_perfil(usuario, nombre=None, apellido=None, email=None, foto=None
     if foto is not None:  # Puede ser None o una ruta
         usuarios[usuario]['foto'] = foto
     
-    # Guardar los cambios
     guardar_usuarios(usuarios)
     
-    # Retornar datos actualizados
     user_data = usuarios[usuario]
     datos_actualizados = {
         "nombre": user_data["nombre"],
@@ -344,11 +330,11 @@ def obtener_email_usuario(usuario):
     usuarios = cargar_usuarios()
     
     if usuario not in usuarios:
-        return f"{usuario}@socialtec.com"  # Fallback
+        return f"{usuario}@socialtec.com"
     
-    # Retornar email real o fallback si no existe
     return usuarios[usuario].get("email", f"{usuario}@socialtec.com")
 
 
 # Inicializar al importar
 inicializar_archivo()
+

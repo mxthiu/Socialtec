@@ -1,5 +1,3 @@
-# gui_login.py - Pantalla de inicio de sesión para SocialTec
-
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QApplication
@@ -34,20 +32,16 @@ class VentanaLogin(QMainWindow):
         layout_principal.setSpacing(20)
         widget_central.setLayout(layout_principal)
         
-        # ===== HEADER - Título y subtítulo =====
         self.crear_header(layout_principal)
         
-        # ===== FORMULARIO - Frame con campos =====
         self.crear_formulario(layout_principal)
         
-        # ===== MENSAJE DE ERROR/ÉXITO =====
         self.label_mensaje = QLabel("")
         self.label_mensaje.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_mensaje.setStyleSheet(ESTILO_ERROR)
         self.label_mensaje.setVisible(False)
         layout_principal.addWidget(self.label_mensaje)
         
-        # ===== BOTÓN DE LOGIN =====
         self.btn_login = QPushButton("Iniciar Sesión")
         self.btn_login.setStyleSheet(ESTILO_BOTON_PRIMARIO)
         self.btn_login.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -55,14 +49,12 @@ class VentanaLogin(QMainWindow):
         self.btn_login.clicked.connect(self.iniciar_sesion)
         layout_principal.addWidget(self.btn_login)
         
-        # ===== LINK OLVIDÉ CONTRASEÑA =====
         btn_olvide = QPushButton("¿Olvidé mi contraseña?")
         btn_olvide.setStyleSheet(ESTILO_BOTON_TEXTO)
         btn_olvide.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_olvide.clicked.connect(self.recuperar_password)
         layout_principal.addWidget(btn_olvide)
         
-        # ===== LINK A REGISTRO =====
         layout_registro = QHBoxLayout()
         layout_registro.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
@@ -156,17 +148,14 @@ class VentanaLogin(QMainWindow):
             self.mostrar_mensaje("La contraseña debe tener al menos 4 caracteres", tipo="error")
             return
         
-        # Validar con datos locales (MOCK)
         from cliente.datos_local import validar_login
         
         self.mostrar_mensaje("Iniciando sesión...", tipo="exito")
         self.btn_login.setEnabled(False)
         
-        # Validar credenciales
         exito, datos_usuario = validar_login(usuario, password)
         
         if exito:
-            # Guardar datos del usuario
             self.datos_usuario = datos_usuario
             QTimer.singleShot(800, self.login_exitoso)
         else:
@@ -176,7 +165,6 @@ class VentanaLogin(QMainWindow):
     def login_exitoso(self):
         """Callback cuando el login es exitoso"""
         self.mostrar_mensaje("¡Login exitoso!", tipo="exito")
-        # Abrir main menu con datos del usuario
         from cliente.gui_main_menu import VentanaMainMenu
         self.ventana_main = VentanaMainMenu(self.datos_usuario)
         self.ventana_main.show()
@@ -210,7 +198,6 @@ class VentanaLogin(QMainWindow):
         self.ventana_recuperar.show()
 
 
-# ===== PUNTO DE ENTRADA PARA PRUEBAS =====
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
@@ -222,3 +209,4 @@ if __name__ == "__main__":
     ventana.show()
     
     sys.exit(app.exec())
+

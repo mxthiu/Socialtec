@@ -1,5 +1,3 @@
-# gui_perfil_publico.py - Vista de perfil solo lectura para otros usuarios
-
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
 )
@@ -226,3 +224,4 @@ class VentanaPerfilPublico(QDialog):
 
         if ventana_main and hasattr(ventana_main, "actualizar_datos_usuario"):
             ventana_main.actualizar_datos_usuario()
+

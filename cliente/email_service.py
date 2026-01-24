@@ -1,5 +1,3 @@
-# email_service.py - Servicio para enviar emails de verificación
-
 import smtplib
 import random
 import string
@@ -7,9 +5,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 
-# ============================================================================
+
 # CONFIGURACIÓN DE EMAIL
-# ============================================================================
+
 
 USAR_EMAIL_REAL = True
 
@@ -17,9 +15,8 @@ USAR_EMAIL_REAL = True
 EMAIL_REMITENTE = "mathiascalvof1@gmail.com"
 PASSWORD_REMITENTE = "pbmatkzgkhxwlswd"
 
-# ============================================================================
 
-# Almacenamiento temporal de códigos (en producción usa Redis o base de datos)
+
 codigos_activos = {}
 
 
@@ -35,14 +32,12 @@ def enviar_codigo_recuperacion(email_destino, nombre_usuario):
     """
     codigo = generar_codigo()
     
-    # Guardar código con timestamp (válido por 10 minutos)
     codigos_activos[email_destino] = {
         'codigo': codigo,
         'expira': datetime.now() + timedelta(minutes=10),
         'usuario': nombre_usuario
     }
     
-    # MODO DESARROLLO: Solo imprime el código en consola
     if not USAR_EMAIL_REAL:
         print("\n" + "="*50)
         print(f"EMAIL SIMULADO A: {email_destino}")
@@ -146,3 +141,4 @@ def limpiar_codigos_expirados():
     
     for email in emails_expirados:
         del codigos_activos[email]
+

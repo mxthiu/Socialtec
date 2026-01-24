@@ -1,5 +1,3 @@
-# gui_editar_perfil.py - Ventana para editar perfil
-
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QFileDialog,
@@ -34,7 +32,7 @@ class VentanaEditarPerfil(QDialog):
         layout_principal.setSpacing(0)
         self.setLayout(layout_principal)
         
-        # ===== HEADER =====
+        
         header = QFrame()
         header.setStyleSheet(f"""
             QFrame {{
@@ -61,7 +59,7 @@ class VentanaEditarPerfil(QDialog):
         
         layout_principal.addWidget(header)
         
-        # ===== SCROLL AREA PARA EL CONTENIDO =====
+        
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet(f"""
@@ -89,13 +87,13 @@ class VentanaEditarPerfil(QDialog):
         
         layout_principal.addWidget(scroll)
         
-        # ===== FOTO DE PERFIL =====
+        
         self.crear_selector_foto(layout_scroll)
         
-        # ===== FORMULARIO =====
+        
         self.crear_formulario(layout_scroll)
         
-        # ===== MENSAJE =====
+        
         self.label_mensaje = QLabel("")
         self.label_mensaje.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_mensaje.setStyleSheet(ESTILO_ERROR)
@@ -104,10 +102,10 @@ class VentanaEditarPerfil(QDialog):
         self.label_mensaje.setMinimumHeight(40)
         layout_scroll.addWidget(self.label_mensaje)
         
-        # ===== ESPACIADOR =====
+        
         layout_scroll.addStretch()
         
-        # ===== BOTONES AL FINAL =====
+        
         self.crear_botones(layout_principal)
     
     def crear_selector_foto(self, layout):
@@ -157,7 +155,7 @@ class VentanaEditarPerfil(QDialog):
         layout_form.setSpacing(20)
         frame.setLayout(layout_form)
         
-        # ===== NOMBRE =====
+        
         label_nombre = QLabel("Nombre")
         label_nombre.setStyleSheet(ESTILO_LABEL)
         
@@ -170,7 +168,7 @@ class VentanaEditarPerfil(QDialog):
         layout_form.addWidget(label_nombre)
         layout_form.addWidget(self.input_nombre)
         
-        # ===== APELLIDO =====
+        
         label_apellido = QLabel("Apellido")
         label_apellido.setStyleSheet(ESTILO_LABEL)
         
@@ -183,7 +181,7 @@ class VentanaEditarPerfil(QDialog):
         layout_form.addWidget(label_apellido)
         layout_form.addWidget(self.input_apellido)
         
-        # ===== EMAIL =====
+        
         label_email = QLabel("Correo Electrónico")
         label_email.setStyleSheet(ESTILO_LABEL)
         
@@ -196,7 +194,7 @@ class VentanaEditarPerfil(QDialog):
         layout_form.addWidget(label_email)
         layout_form.addWidget(self.input_email)
         
-        # ===== USUARIO (NO EDITABLE) =====
+        
         label_usuario_titulo = QLabel("Nombre de Usuario")
         label_usuario_titulo.setStyleSheet(ESTILO_LABEL)
         
@@ -363,3 +361,4 @@ class VentanaEditarPerfil(QDialog):
             self.label_mensaje.setStyleSheet(ESTILO_EXITO)
         
         self.label_mensaje.setVisible(True)
+

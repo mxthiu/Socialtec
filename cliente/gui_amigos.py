@@ -1,5 +1,3 @@
-# gui_amigos.py - Pantalla de lista de amigos
-
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QScrollArea
@@ -202,7 +200,6 @@ class ContenidoAmigos(QWidget):
     
     def actualizar_lista_amigos(self):
         """Actualiza la lista de amigos"""
-        # Limpiar layout completo (incluye stretches previas)
         while self.layout_amigos.count():
             item = self.layout_amigos.takeAt(0)
             widget = item.widget()
@@ -210,12 +207,9 @@ class ContenidoAmigos(QWidget):
                 widget.deleteLater()
         self.widgets_amigos.clear()
         
-        amigos_ordenados = sorted(
-            self.usuario_data['amigos'],
-            key=lambda x: f"{x['nombre']} {x['apellido']}"
-        )
+        from cliente.algoritmos import merge_sort_amigos
+        amigos_ordenados = merge_sort_amigos(self.usuario_data['amigos'])
 
-        # Actualizar contador en header
         self.label_titulo.setText(f"Mis Amigos ({len(amigos_ordenados)})")
         
         if not amigos_ordenados:
@@ -315,3 +309,4 @@ class ContenidoAmigos(QWidget):
             pass
 
         self.actualizar_lista_amigos()
+

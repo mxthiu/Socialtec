@@ -1,5 +1,3 @@
-# gui_perfil.py - Pantalla de perfil del usuario en SocialTec
-
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QApplication,
@@ -15,7 +13,7 @@ from cliente.estilos import *
 
 class WidgetAmigo(QWidget):
     """Widget personalizado para mostrar un amigo en la lista"""
-    eliminar_clicked = pyqtSignal(str)  # Señal cuando se elimina
+    eliminar_clicked = pyqtSignal(str)
     
     def __init__(self, nombre, apellido, usuario, foto_path=None):
         super().__init__()
@@ -109,7 +107,6 @@ class WidgetAmigo(QWidget):
         """)
         btn_eliminar.clicked.connect(lambda: self.eliminar_clicked.emit(self.usuario))
         
-        # Agregar widgets al layout
         layout.addWidget(label_foto)
         layout.addLayout(layout_texto)
         layout.addStretch()
@@ -178,10 +175,10 @@ class VentanaPerfil(QMainWindow):
         layout_principal.setSpacing(0)
         widget_central.setLayout(layout_principal)
         
-        # ===== BARRA SUPERIOR (Búsqueda) =====
+        
         self.crear_barra_superior(layout_principal)
         
-        # ===== CONTENIDO CON SCROLL =====
+        
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
@@ -194,16 +191,16 @@ class VentanaPerfil(QMainWindow):
         layout_contenido.setSpacing(20)
         contenido.setLayout(layout_contenido)
         
-        # ===== HEADER DE PERFIL =====
+        
         self.crear_header_perfil(layout_contenido)
         
-        # ===== ESTADÍSTICAS =====
+        
         self.crear_estadisticas(layout_contenido)
         
-        # ===== LISTA DE AMIGOS =====
+        
         self.crear_lista_amigos(layout_contenido)
         
-        # ===== BOTÓN CERRAR SESIÓN =====
+        
         btn_cerrar_sesion = QPushButton("Cerrar Sesión")
         btn_cerrar_sesion.setStyleSheet(f"""
             QPushButton {{
@@ -389,7 +386,6 @@ class VentanaPerfil(QMainWindow):
     
     def actualizar_lista_amigos(self):
         """Actualiza la lista de amigos en la UI"""
-        # Limpiar lista actual
         for widget in self.widgets_amigos:
             widget.deleteLater()
         self.widgets_amigos.clear()
@@ -399,7 +395,6 @@ class VentanaPerfil(QMainWindow):
             key=lambda x: f"{x['nombre']} {x['apellido']}"
         )
         
-        # Crear widget para cada amigo
         for amigo in amigos_ordenados:
             widget_amigo = WidgetAmigo(
                 amigo['nombre'],
@@ -411,7 +406,6 @@ class VentanaPerfil(QMainWindow):
             self.layout_lista.addWidget(widget_amigo)
             self.widgets_amigos.append(widget_amigo)
         
-        # Si no hay amigos
         if not amigos_ordenados:
             label_vacio = QLabel("No tienes amigos aún.\n¡Busca usuarios y agrégalos!")
             label_vacio.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -442,10 +436,8 @@ class VentanaPerfil(QMainWindow):
     
     def eliminar_amigo(self, usuario):
         """Elimina un amigo de la lista"""
-        # Confirmar eliminación
         print(f"Eliminando amigo: {usuario}")
         
-        # Remover de la lista
         self.usuario_data['amigos'] = [
             amigo for amigo in self.usuario_data['amigos']
             if amigo['usuario'] != usuario
@@ -495,7 +487,7 @@ class VentanaPerfil(QMainWindow):
         self.close()
 
 
-# ===== PRUEBAS =====
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     fuente = QFont("Segoe UI", 10)
@@ -505,3 +497,4 @@ if __name__ == "__main__":
     ventana.show()
     
     sys.exit(app.exec())
+

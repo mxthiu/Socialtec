@@ -1,5 +1,3 @@
-# gui_busqueda.py - Pantalla de búsqueda de usuarios
-
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QScrollArea
@@ -140,6 +138,7 @@ class ContenidoBusqueda(QWidget):
         self.layout_resultados = QVBoxLayout()
         self.layout_resultados.setContentsMargins(20, 20, 20, 20)
         self.layout_resultados.setSpacing(12)
+        self.layout_resultados.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.contenedor_resultados.setLayout(self.layout_resultados)
         
         # Mensaje inicial
@@ -154,7 +153,6 @@ class ContenidoBusqueda(QWidget):
             }}
         """)
         self.layout_resultados.addWidget(self.label_mensaje)
-        self.layout_resultados.addStretch()
         
         layout_principal.addWidget(scroll)
     
@@ -212,7 +210,6 @@ class ContenidoBusqueda(QWidget):
         """Busca usuarios según el texto ingresado"""
         texto = self.input_busqueda.text().strip().lower()
         
-        # Limpiar resultados anteriores
         for widget in self.resultados_widgets:
             widget.deleteLater()
         self.resultados_widgets.clear()
@@ -239,8 +236,6 @@ class ContenidoBusqueda(QWidget):
                 widget.ver_perfil_clicked.connect(self.ver_perfil_usuario)
                 self.layout_resultados.addWidget(widget)
                 self.resultados_widgets.append(widget)
-            
-            self.layout_resultados.addStretch()
     
     def ver_perfil_usuario(self, usuario_data):
         """Abre un perfil en modo lectura para otro usuario"""
@@ -265,3 +260,4 @@ class ContenidoBusqueda(QWidget):
                 self.ventana_perfil.show()
         except Exception:
             return
+

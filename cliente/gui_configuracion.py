@@ -1,5 +1,3 @@
-# gui_configuracion.py - Configuración y estadísticas
-
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QScrollArea
@@ -51,13 +49,13 @@ class ContenidoConfiguracion(QWidget):
         """)
         layout_contenido.addWidget(label_titulo)
         
-        # ===== ESTADÍSTICAS =====
+        
         self.crear_seccion_estadisticas(layout_contenido)
         
-        # ===== INFORMACIÓN DE CUENTA =====
+        
         self.crear_seccion_cuenta(layout_contenido)
         
-        # ===== ACCIONES =====
+        
         self.crear_seccion_acciones(layout_contenido)
         
         layout_contenido.addStretch()
@@ -115,7 +113,7 @@ class ContenidoConfiguracion(QWidget):
         label_titulo.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto_secundario']};
-                font-size: 14px;
+                font-size: 20px;
                 background: transparent;
             }}
         """)
@@ -124,7 +122,7 @@ class ContenidoConfiguracion(QWidget):
         label_valor.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto']};
-                font-size: 16px;
+                font-size: 20px;
                 font-weight: bold;
                 background: transparent;
             }}
@@ -188,7 +186,7 @@ class ContenidoConfiguracion(QWidget):
         label_titulo.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto_secundario']};
-                font-size: 12px;
+                font-size: 20px;
                 background: transparent;
             }}
         """)
@@ -197,7 +195,7 @@ class ContenidoConfiguracion(QWidget):
         label_valor.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto']};
-                font-size: 15px;
+                font-size: 20px;
                 font-weight: bold;
                 background: transparent;
             }}
@@ -329,10 +327,8 @@ class ContenidoConfiguracion(QWidget):
     
     def on_perfil_actualizado(self, datos_nuevos):
         """Callback cuando se actualiza el perfil"""
-        # Actualizar datos locales
         self.usuario_data.update(datos_nuevos)
         
-        # Actualizar todas las pantallas del main menu
         if self.parent_window:
             self.parent_window.usuario_data.update(datos_nuevos)
             self.parent_window.actualizar_datos_usuario()
@@ -350,3 +346,4 @@ class ContenidoConfiguracion(QWidget):
         """Cerrar sesión"""
         if self.parent_window:
             self.parent_window.cerrar_sesion()
+

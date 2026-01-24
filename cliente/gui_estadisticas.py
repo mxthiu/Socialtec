@@ -1,5 +1,3 @@
-# gui_estadisticas.py - Ventana de estadísticas globales del sistema
-
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
     QLabel, QFrame, QScrollArea, QWidget
@@ -88,7 +86,7 @@ class VentanaEstadisticas(QDialog):
         
         stats = obtener_estadisticas_globales()
         
-        # ===== ESTADÍSTICAS PRINCIPALES =====
+        
         self.crear_card_principal(
             layout,
             "Total de Usuarios",
@@ -103,7 +101,7 @@ class VentanaEstadisticas(QDialog):
             "amigos por usuario"
         )
         
-        # ===== USUARIO CON MÁS AMIGOS =====
+        
         if stats["usuario_mas_amigos"]:
             self.crear_card_usuario(
                 layout,
@@ -112,7 +110,7 @@ class VentanaEstadisticas(QDialog):
                 COLORES['exito']
             )
         
-        # ===== USUARIO CON MENOS AMIGOS =====
+        
         if stats["usuario_menos_amigos"]:
             self.crear_card_usuario(
                 layout,
@@ -121,7 +119,7 @@ class VentanaEstadisticas(QDialog):
                 COLORES['texto_secundario']
             )
         
-        # ===== TOP 5 USUARIOS =====
+        
         if stats["todos_usuarios"]:
             self.crear_top_usuarios(layout, stats["todos_usuarios"][:5])
     
@@ -358,3 +356,4 @@ class VentanaEstadisticas(QDialog):
         layout.addLayout(layout_amigos)
         
         return widget
+

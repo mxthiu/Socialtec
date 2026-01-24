@@ -1,5 +1,3 @@
-# gui_cambiar_password.py - Cambiar contraseña con código por email
-
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QStackedWidget, QWidget
@@ -322,3 +320,4 @@ class VentanaCambiarPassword(QDialog):
             label.setStyleSheet(ESTILO_EXITO)
         
         label.setVisible(True)
+

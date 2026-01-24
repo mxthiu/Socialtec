@@ -136,3 +136,4 @@ ESTILO_EXITO = f"""
         padding: 5px;
     }}
 """
+

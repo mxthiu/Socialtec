@@ -1,5 +1,3 @@
-# gui_perfil_contenido.py - Contenido de la pantalla de perfil
-
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QFrame, QScrollArea
@@ -39,13 +37,13 @@ class ContenidoPerfil(QWidget):
         layout_contenido.setSpacing(25)
         contenido.setLayout(layout_contenido)
         
-        # ===== HEADER CON FOTO Y NOMBRE =====
+        
         self.crear_header(layout_contenido)
         
-        # ===== ESTADÍSTICAS =====
+        
         self.crear_estadisticas(layout_contenido)
         
-        # ===== INFORMACIÓN RÁPIDA =====
+        
         self.crear_info_rapida(layout_contenido)
         
         layout_contenido.addStretch()
@@ -157,7 +155,7 @@ class ContenidoPerfil(QWidget):
         label_numero.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto']};
-                font-size: 24px;
+                font-size: 44px;
                 font-weight: bold;
                 background: transparent;
             }}
@@ -168,7 +166,7 @@ class ContenidoPerfil(QWidget):
         label_texto.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto_secundario']};
-                font-size: 13px;
+                font-size: 30px;
                 background: transparent;
             }}
         """)
@@ -250,7 +248,7 @@ class ContenidoPerfil(QWidget):
         label_titulo.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto_secundario']};
-                font-size: 12px;
+                font-size: 20px;
                 background: transparent;
             }}
         """)
@@ -259,7 +257,7 @@ class ContenidoPerfil(QWidget):
         label_valor.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto']};
-                font-size: 14px;
+                font-size: 22px;
                 font-weight: bold;
                 background: transparent;
             }}
@@ -343,3 +341,4 @@ class ContenidoPerfil(QWidget):
         # Estadística de amigos
         if hasattr(self, "label_amigos_stat"):
             self.label_amigos_stat.setText(str(len(amigos)))
+

@@ -1,5 +1,3 @@
-# gui_recuperar_password.py - Ventana para recuperar contraseña sin estar autenticado
-
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QComboBox, QScrollArea, QWidget
@@ -32,7 +30,7 @@ class VentanaRecuperarPassword(QDialog):
         layout_principal.setSpacing(0)
         self.setLayout(layout_principal)
         
-        # ===== HEADER =====
+        
         header = QFrame()
         header.setStyleSheet(f"""
             QFrame {{
@@ -59,7 +57,7 @@ class VentanaRecuperarPassword(QDialog):
         
         layout_principal.addWidget(header)
         
-        # ===== SCROLL AREA PARA EL CONTENIDO =====
+        
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet(f"""
@@ -87,10 +85,10 @@ class VentanaRecuperarPassword(QDialog):
         
         layout_principal.addWidget(scroll)
         
-        # ===== STACK 1: SELECCIONAR USUARIO Y ENVIAR CÓDIGO =====
+        
         self.pantalla_usuario = self.crear_pantalla_usuario()
         
-        # ===== STACK 2: INGRESAR CÓDIGO Y NUEVA CONTRASEÑA =====
+        
         self.pantalla_codigo = self.crear_pantalla_codigo()
         
         # Agregar pantallas al scroll
@@ -100,7 +98,7 @@ class VentanaRecuperarPassword(QDialog):
         
         layout_scroll.addStretch()
         
-        # ===== BOTONES AL FINAL =====
+        
         self.crear_botones(layout_principal)
     
     def crear_pantalla_usuario(self):
@@ -395,3 +393,4 @@ class VentanaRecuperarPassword(QDialog):
             label.setStyleSheet(ESTILO_EXITO)
         
         label.setVisible(True)
+

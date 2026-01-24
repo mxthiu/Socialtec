@@ -1,5 +1,3 @@
-# gui_main_menu.py - Menú principal con navegación inferior
-
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QStackedWidget, QFrame, QApplication
@@ -37,7 +35,7 @@ class BotonNavegacion(QPushButton):
                     color: {COLORES['primario']};
                     border: none;
                     padding: 10px;
-                    font-size: 11px;
+                    font-size: 18px;
                     font-weight: bold;
                 }}
             """)
@@ -48,7 +46,7 @@ class BotonNavegacion(QPushButton):
                     color: {COLORES['texto_secundario']};
                     border: none;
                     padding: 10px;
-                    font-size: 11px;
+                    font-size: 18px;
                 }}
                 QPushButton:hover {{
                     color: {COLORES['texto']};
@@ -98,10 +96,10 @@ class VentanaMainMenu(QMainWindow):
         layout_principal.setSpacing(0)
         widget_central.setLayout(layout_principal)
         
-        # ===== CONTENEDOR DE PANTALLAS (StackedWidget) =====
+        
         self.stack_pantallas = QStackedWidget()
         
-        # Crear las diferentes pantallas
+
         self.pantalla_perfil = ContenidoPerfil(self.usuario_data, self)
         self.pantalla_busqueda = ContenidoBusqueda(self.usuario_data, self)
         self.pantalla_amigos = ContenidoAmigos(self.usuario_data, self)
@@ -115,7 +113,7 @@ class VentanaMainMenu(QMainWindow):
         
         layout_principal.addWidget(self.stack_pantallas)
         
-        # ===== BARRA DE NAVEGACIÓN INFERIOR =====
+        
         self.crear_barra_navegacion(layout_principal)
         
         # Iniciar en perfil
@@ -183,7 +181,7 @@ class VentanaMainMenu(QMainWindow):
         self.close()
 
 
-# ===== PRUEBAS =====
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     fuente = QFont("Segoe UI", 10)
@@ -193,3 +191,4 @@ if __name__ == "__main__":
     ventana.show()
     
     sys.exit(app.exec())
+
