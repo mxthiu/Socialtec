@@ -52,8 +52,14 @@ class ContenidoPerfil(QWidget):
     def crear_header(self, layout):
         """Header con foto y nombre"""
         layout_header = QVBoxLayout()
-        layout_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout_header.setSpacing(12)
+        layout_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        # Contenedor centrado para la foto
+        contenedor_foto = QWidget()
+        layout_foto = QHBoxLayout()
+        layout_foto.setContentsMargins(0, 0, 0, 0)
+        layout_foto.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # Foto de perfil
         self.label_foto = QLabel()
@@ -75,6 +81,9 @@ class ContenidoPerfil(QWidget):
                 }}
             """)
             self.label_foto.setText(inicial)
+        
+        layout_foto.addWidget(self.label_foto)
+        contenedor_foto.setLayout(layout_foto)
         
         # Nombre
         nombre_completo = f"{self.usuario_data['nombre']} {self.usuario_data['apellido']}"
@@ -100,7 +109,7 @@ class ContenidoPerfil(QWidget):
         """)
         self.label_usuario.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        layout_header.addWidget(self.label_foto)
+        layout_header.addWidget(contenedor_foto)
         layout_header.addWidget(self.label_nombre)
         layout_header.addWidget(self.label_usuario)
         

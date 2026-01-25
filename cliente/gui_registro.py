@@ -177,9 +177,16 @@ class VentanaRegistro(QMainWindow):
         self.input_usuario.setPlaceholderText("Elige un nombre de usuario")
         self.input_usuario.setStyleSheet(ESTILO_INPUT)
         self.input_usuario.setMinimumHeight(45)
+        self.input_usuario.textChanged.connect(self.validar_usuario_disponible)
         
         layout_form.addWidget(label_usuario)
         layout_form.addWidget(self.input_usuario)
+        
+        self.label_usuario_error = QLabel("")
+        self.label_usuario_error.setStyleSheet(f"QLabel {{ color: {COLORES['error']}; font-size: 12px; }}")
+        self.label_usuario_error.setVisible(False)
+        self.label_usuario_error.setWordWrap(True)
+        layout_form.addWidget(self.label_usuario_error)
         layout_form.addSpacing(5)
         
         # Email
@@ -344,7 +351,32 @@ class VentanaRegistro(QMainWindow):
     
     def ir_a_login(self):
         """Vuelve a la ventana de login"""
+        from cliente.gui_login import VentanaLogin
+        self.ventana_login = VentanaLogin()
+        self.ventana_login.show()
         self.close()
+    
+    def validar_usuario_disponible(self):
+        """Valida en tiempo real si el usuario está disponible"""
+        usuario = self.input_usuario.text().strip()
+        
+        if not usuario:
+            self.label_usuario_error.setVisible(False)
+            return
+        
+        if len(usuario) < 3:
+            self.label_usuario_error.setText("El usuario debe tener al menos 3 caracteres")
+            self.label_usuario_error.setVisible(True)
+            return
+        
+        from cliente.datos_local import cargar_usuarios
+        usuarios = cargar_usuarios()
+        
+        if usuario in usuarios:
+            self.label_usuario_error.setText("Este usuario ya está en uso")
+            self.label_usuario_error.setVisible(True)
+        else:
+            self.label_usuario_error.setVisible(False)
 
 
 
