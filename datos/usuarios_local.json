@@ -48,5 +48,14 @@
       "juanp",
       "ana_lopez"
     ]
+  },
+  "BANANOMAN": {
+    "nombre": "banano",
+    "apellido": "poderoso",
+    "usuario": "BANANOMAN",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$1DrnnLPWGmNMKaWU0hqjdA$G8WJBFnTNLhMMKYr9M1txdNw8x42Ta/4husAKhNA4f4",
+    "email": "picadoj994@gmail.com",
+    "foto": null,
+    "amigos": []
   }
 }
