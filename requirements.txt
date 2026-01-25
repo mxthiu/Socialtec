@@ -1,0 +1,7 @@
+PyQt6
+Pillow
+passlib[bcrypt]
+bcrypt
+argon2-cffi
+networkx
+matplotlib
