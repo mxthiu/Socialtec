@@ -252,10 +252,20 @@ class ContenidoAmigos(QWidget):
     def eliminar_amigo(self, usuario):
         """Elimina un amigo"""
         try:
-            from cliente.datos_local import eliminar_amigo, cargar_usuarios, obtener_amigos_completos
+            from cliente.dialogos import confirmar_eliminar_amigo
+            from cliente.datos_local import eliminar_amigo as eliminar_amigo_db, cargar_usuarios, obtener_amigos_completos
+            
+            nombre_amigo = usuario
+            for amigo in self.usuario_data.get('amigos', []):
+                if amigo.get('usuario') == usuario:
+                    nombre_amigo = f"{amigo.get('nombre', '')} {amigo.get('apellido', '')}".strip()
+                    break
+            
+            if not confirmar_eliminar_amigo(nombre_amigo, self):
+                return
 
             usuario_actual = self.usuario_data.get("usuario")
-            exito, _ = eliminar_amigo(usuario_actual, usuario)
+            exito, _ = eliminar_amigo_db(usuario_actual, usuario)
             if not exito:
                 return
 
@@ -276,7 +286,7 @@ class ContenidoAmigos(QWidget):
         """Ver perfil de un amigo en modo lectura"""
         try:
             from cliente.datos_local import cargar_usuarios, obtener_amigos_completos
-            from cliente.gui_perfil_publico import VentanaPerfilPublico
+            from cliente.gui_perfil_publico import ContenidoPerfilPublico
             usuarios = cargar_usuarios()
             username = usuario_data["usuario"]
             if username in usuarios:
@@ -290,8 +300,8 @@ class ContenidoAmigos(QWidget):
                     "email": datos.get("email", ""),
                     "amigos": amigos,
                 }
-                self.ventana_perfil = VentanaPerfilPublico(self.usuario_data, perfil_data, self)
-                self.ventana_perfil.show()
+                contenido = ContenidoPerfilPublico(self.usuario_data, perfil_data, self.parent_window)
+                self.parent_window.navegar_a_pantalla(contenido)
         except Exception:
             return
     

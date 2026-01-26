@@ -1,32 +1,27 @@
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout,
-    QLabel, QFrame, QScrollArea, QWidget
+    QVBoxLayout, QHBoxLayout,
+    QLabel, QFrame, QScrollArea, QWidget, QPushButton
 )
 from PyQt6.QtCore import Qt
 
 from cliente.estilos import *
 
 
-class VentanaEstadisticas(QDialog):
-    """Ventana con estadísticas globales de la red social"""
+class ContenidoEstadisticas(QWidget):
+    """Pantalla de estadísticas globales de la red social"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent_window = parent
         self.inicializar_ui()
     
     def inicializar_ui(self):
         """Configura la interfaz"""
-        self.setWindowTitle("Estadísticas de SocialTec")
-        self.setFixedSize(500, 650)
-        self.setStyleSheet(ESTILO_VENTANA)
-        self.setModal(True)
-        
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
         self.setLayout(layout_principal)
         
-        # Header
         self.crear_header(layout_principal)
         
         # Scroll para contenido
@@ -49,7 +44,7 @@ class VentanaEstadisticas(QDialog):
         layout_principal.addWidget(scroll)
     
     def crear_header(self, layout):
-        """Header con título"""
+        """Header con título y botón volver"""
         frame = QFrame()
         frame.setStyleSheet(f"""
             QFrame {{
@@ -59,8 +54,32 @@ class VentanaEstadisticas(QDialog):
             }}
         """)
         
-        layout_header = QVBoxLayout()
-        frame.setLayout(layout_header)
+        layout_frame = QVBoxLayout()
+        frame.setLayout(layout_frame)
+        
+        btn_volver = QPushButton("← Volver")
+        btn_volver.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORES['superficie_clara']};
+                color: {COLORES['texto']};
+                border: 1px solid {COLORES['borde']};
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 14px;
+                font-weight: 500;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORES['primario']};
+                color: white;
+                border: 1px solid {COLORES['primario']};
+            }}
+        """)
+        btn_volver.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_volver.clicked.connect(self.volver_atras)
+        btn_volver.setFixedWidth(110)
+        
+        layout_frame.addWidget(btn_volver)
+        layout_frame.addSpacing(10)
         
         label_titulo = QLabel("Estadísticas Globales")
         label_titulo.setStyleSheet(f"""
@@ -75,10 +94,15 @@ class VentanaEstadisticas(QDialog):
         label_desc = QLabel("Análisis de la red social SocialTec")
         label_desc.setStyleSheet(ESTILO_SUBTITULO)
         
-        layout_header.addWidget(label_titulo)
-        layout_header.addWidget(label_desc)
+        layout_frame.addWidget(label_titulo)
+        layout_frame.addWidget(label_desc)
         
         layout.addWidget(frame)
+    
+    def volver_atras(self):
+        """Vuelve a la pantalla anterior"""
+        if self.parent_window:
+            self.parent_window.volver_atras()
     
     def cargar_estadisticas(self, layout):
         """Carga y muestra las estadísticas"""
