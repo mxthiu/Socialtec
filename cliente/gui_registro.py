@@ -22,7 +22,8 @@ class VentanaRegistro(QMainWindow):
         """Configura la interfaz de usuario"""
         # Configuración de la ventana
         self.setWindowTitle("SocialTec - Crear Cuenta")
-        self.setFixedSize(500, 750)
+        self.resize(440, 720)
+        self.setMinimumSize(400, 640)
         self.setStyleSheet(ESTILO_VENTANA)
         
         # Widget central con scroll

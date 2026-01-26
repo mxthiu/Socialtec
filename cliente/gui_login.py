@@ -19,7 +19,8 @@ class VentanaLogin(QMainWindow):
         """Configura la interfaz de usuario"""
         # Configuración de la ventana
         self.setWindowTitle("SocialTec - Iniciar Sesión")
-        self.setFixedSize(450, 600)
+        self.resize(420, 620)
+        self.setMinimumSize(360, 540)
         self.setStyleSheet(ESTILO_VENTANA)
         
         # Widget central
