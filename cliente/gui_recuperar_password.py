@@ -20,7 +20,8 @@ class VentanaRecuperarPassword(QDialog):
     def inicializar_ui(self):
         """Configura la interfaz"""
         self.setWindowTitle("Recuperar Contraseña")
-        self.setFixedSize(500, 700)
+        self.resize(440, 700)
+        self.setMinimumSize(400, 620)
         self.setStyleSheet(ESTILO_VENTANA)
         self.setModal(True)
         

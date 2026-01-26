@@ -85,7 +85,8 @@ class VentanaMainMenu(QMainWindow):
     def inicializar_ui(self):
         """Configura la interfaz principal"""
         self.setWindowTitle("SocialTec")
-        self.setFixedSize(500, 750)
+        self.resize(420, 680)
+        self.setMinimumSize(380, 620)
         self.setStyleSheet(ESTILO_VENTANA)
         
         # Widget central
