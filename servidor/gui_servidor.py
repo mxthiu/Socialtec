@@ -1,5 +1,5 @@
 """
-GUI del servidor (ej. PyQt6).
+GUI del servidor (ej. tkinter).
 
 TODO:
 - Botones para iniciar/detener servidor.
