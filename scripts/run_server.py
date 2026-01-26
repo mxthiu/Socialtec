@@ -11,7 +11,7 @@ from __future__ import annotations
 
 def _try_run_real_server() -> bool:
     """
-    Intenta ejecutar el servidor real si ya fue implementado en servidor/servidor_tcp.py.
+    Intenta ejecutar el servidor real si ya fue implementado, (obviamente todavía no), en servidor/servidor_tcp.py.
     Retorna True si pudo ejecutarlo, False si todavía no existe (o no tiene la API esperada).
     """
     try:
