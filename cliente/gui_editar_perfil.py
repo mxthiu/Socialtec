@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout,
+    QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QFileDialog,
     QScrollArea, QWidget
 )
@@ -9,24 +9,19 @@ from PyQt6.QtGui import QPixmap, QPainter, QPainterPath
 from cliente.estilos import *
 
 
-class VentanaEditarPerfil(QDialog):
-    """Ventana de diálogo para editar el perfil"""
-    perfil_actualizado = pyqtSignal(dict)  # Señal cuando se actualiza
+class ContenidoEditarPerfil(QWidget):
+    """Pantalla para editar el perfil"""
+    perfil_actualizado = pyqtSignal(dict)
     
     def __init__(self, usuario_data, parent=None):
         super().__init__(parent)
+        self.parent_window = parent
         self.usuario_data = usuario_data
         self.foto_nueva = None
         self.inicializar_ui()
     
     def inicializar_ui(self):
         """Configura la interfaz"""
-        self.setWindowTitle("Editar Perfil")
-        self.setFixedSize(500, 700)
-        self.setStyleSheet(ESTILO_VENTANA)
-        self.setModal(True)
-        
-        # Layout principal
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
@@ -36,25 +31,47 @@ class VentanaEditarPerfil(QDialog):
         header = QFrame()
         header.setStyleSheet(f"""
             QFrame {{
-                background-color: {COLORES['primario']};
+                background-color: {COLORES['superficie']};
                 padding: 20px;
-                border-radius: 0;
+                border-bottom: 1px solid {COLORES['borde']};
             }}
         """)
         layout_header = QVBoxLayout()
         layout_header.setContentsMargins(0, 0, 0, 0)
-        layout_header.setSpacing(5)
+        layout_header.setSpacing(10)
         header.setLayout(layout_header)
+        
+        btn_volver = QPushButton("← Volver")
+        btn_volver.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORES['superficie_clara']};
+                color: {COLORES['texto']};
+                border: 1px solid {COLORES['borde']};
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 14px;
+                font-weight: 500;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORES['primario']};
+                color: white;
+                border: 1px solid {COLORES['primario']};
+            }}
+        """)
+        btn_volver.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_volver.clicked.connect(self.volver_atras)
+        btn_volver.setFixedWidth(110)
         
         titulo = QLabel("Editar Perfil")
         titulo.setStyleSheet(f"""
             QLabel {{
-                color: white;
+                color: {COLORES['texto']};
                 font-size: 24px;
                 font-weight: bold;
             }}
         """)
-        titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        layout_header.addWidget(btn_volver)
         layout_header.addWidget(titulo)
         
         layout_principal.addWidget(header)
@@ -248,7 +265,7 @@ class VentanaEditarPerfil(QDialog):
         """)
         btn_cancelar.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_cancelar.setMinimumHeight(50)
-        btn_cancelar.clicked.connect(self.reject)
+        btn_cancelar.clicked.connect(self.cancelar_con_confirmacion)
         
         # Guardar
         self.btn_guardar = QPushButton("Guardar Cambios")
@@ -346,10 +363,36 @@ class VentanaEditarPerfil(QDialog):
         if exito:
             # Emitir señal con datos actualizados
             self.perfil_actualizado.emit(datos_nuevos)
-            QTimer.singleShot(1000, self.accept)
+            QTimer.singleShot(1000, self.volver_atras)
         else:
             self.btn_guardar.setEnabled(True)
             self.mostrar_mensaje(mensaje, "error")
+    
+    def cancelar_con_confirmacion(self):
+        """Cancela con confirmación si hay cambios"""
+        from cliente.dialogos import confirmar_cancelar_edicion
+        
+        nombre_actual = self.input_nombre.text().strip()
+        apellido_actual = self.input_apellido.text().strip()
+        email_actual = self.input_email.text().strip()
+        
+        hay_cambios = (
+            nombre_actual != self.usuario_data.get("nombre", "") or
+            apellido_actual != self.usuario_data.get("apellido", "") or
+            email_actual != self.usuario_data.get("email", "") or
+            self.foto_nueva is not None
+        )
+        
+        if hay_cambios:
+            if not confirmar_cancelar_edicion(self):
+                return
+        
+        self.volver_atras()
+    
+    def volver_atras(self):
+        """Vuelve a la pantalla anterior"""
+        if self.parent_window:
+            self.parent_window.volver_atras()
     
     def mostrar_mensaje(self, texto, tipo="error"):
         """Muestra mensaje"""
