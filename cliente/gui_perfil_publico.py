@@ -1,27 +1,70 @@
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QPainter, QPainterPath
 
-from cliente.estilos import COLORES, ESTILO_VENTANA
+from cliente.estilos import COLORES
 
 
-class VentanaPerfilPublico(QDialog):
-    def __init__(self, usuario_actual, perfil_objetivo, parent=None):
-        super().__init__(parent)
+class ContenidoPerfilPublico(QWidget):
+    def __init__(self, usuario_actual, perfil_objetivo, parent_window):
+        super().__init__()
         self.usuario_actual = usuario_actual
         self.perfil_objetivo = perfil_objetivo
-        self.setWindowTitle(f"Perfil de @{perfil_objetivo.get('usuario', '')}")
-        self.setFixedSize(420, 540)
-        self.setStyleSheet(ESTILO_VENTANA)
+        self.parent_window = parent_window
         self.inicializar_ui()
 
     def inicializar_ui(self):
         layout = QVBoxLayout()
-        layout.setContentsMargins(24, 20, 24, 20)
-        layout.setSpacing(18)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         self.setLayout(layout)
+
+        header_frame = QFrame()
+        header_frame.setStyleSheet(f"QFrame {{ background-color: {COLORES['superficie']}; border-bottom: 1px solid {COLORES['borde']}; }}")
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(20, 16, 20, 16)
+        header_frame.setLayout(header_layout)
+
+        btn_volver = QPushButton("← Volver")
+        btn_volver.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_volver.setStyleSheet(
+            f"""
+            QPushButton {{
+                background-color: {COLORES['superficie_clara']};
+                color: {COLORES['texto']};
+                border: 1px solid {COLORES['borde']};
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 14px;
+                font-weight: 500;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORES['primario']};
+                color: white;
+                border: 1px solid {COLORES['primario']};
+            }}
+            """
+        )
+        btn_volver.setFixedWidth(110)
+        btn_volver.clicked.connect(self.volver_atras)
+        header_layout.addWidget(btn_volver)
+
+        titulo = QLabel(f"Perfil de @{self.perfil_objetivo.get('usuario', '')}")
+        titulo.setStyleSheet(f"color: {COLORES['texto']}; font-size: 18px; font-weight: bold;")
+        header_layout.addWidget(titulo, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        header_layout.addStretch()
+
+        layout.addWidget(header_frame)
+
+        contenido = QWidget()
+        contenido_layout = QVBoxLayout()
+        contenido_layout.setContentsMargins(24, 20, 24, 20)
+        contenido_layout.setSpacing(18)
+        contenido.setLayout(contenido_layout)
+        layout.addWidget(contenido)
 
         header = QFrame()
         header.setStyleSheet(f"QFrame {{ background-color: {COLORES['superficie']}; border-radius: 14px; }}")
@@ -54,7 +97,7 @@ class VentanaPerfilPublico(QDialog):
         if label_email.text():
             header_layout.addWidget(label_email)
 
-        layout.addWidget(header)
+        contenido_layout.addWidget(header)
 
         stats_frame = QFrame()
         stats_frame.setStyleSheet(f"QFrame {{ background-color: {COLORES['superficie']}; border-radius: 12px; }}")
@@ -69,7 +112,7 @@ class VentanaPerfilPublico(QDialog):
         self.actualizar_conteo_amigos()
 
         stats_layout.addWidget(self.label_amigos)
-        layout.addWidget(stats_frame)
+        contenido_layout.addWidget(stats_frame)
 
         self.btn_amigo = QPushButton()
         self.btn_amigo.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -94,33 +137,14 @@ class VentanaPerfilPublico(QDialog):
             """
         )
         self.btn_amigo.clicked.connect(self.toggle_amistad)
-        layout.addWidget(self.btn_amigo)
+        contenido_layout.addWidget(self.btn_amigo)
 
         self.label_estado = QLabel()
         self.label_estado.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_estado.setStyleSheet(f"color: {COLORES['texto_secundario']}; font-size: 13px;")
-        layout.addWidget(self.label_estado)
+        contenido_layout.addWidget(self.label_estado)
 
-        btn_cerrar = QPushButton("Cerrar")
-        btn_cerrar.setFixedHeight(40)
-        btn_cerrar.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_cerrar.setStyleSheet(
-            f"""
-            QPushButton {{
-                background-color: transparent;
-                color: {COLORES['texto']};
-                border: 2px solid {COLORES['borde']};
-                border-radius: 10px;
-                font-size: 14px;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{
-                background-color: {COLORES['superficie_clara']};
-            }}
-            """
-        )
-        btn_cerrar.clicked.connect(self.close)
-        layout.addWidget(btn_cerrar)
+        contenido_layout.addStretch()
 
         self.refrescar_estado_amistad()
 
@@ -219,9 +243,8 @@ class VentanaPerfilPublico(QDialog):
         self.label_amigos.setText(f"{cantidad} amigos")
 
     def notificar_cambio(self):
-        contenedor = self.parent()
-        ventana_main = getattr(contenedor, "parent_window", None) if contenedor else None
+        if hasattr(self.parent_window, "actualizar_datos_usuario"):
+            self.parent_window.actualizar_datos_usuario()
 
-        if ventana_main and hasattr(ventana_main, "actualizar_datos_usuario"):
-            ventana_main.actualizar_datos_usuario()
-
+    def volver_atras(self):
+        self.parent_window.volver_atras()

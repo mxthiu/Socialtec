@@ -311,19 +311,17 @@ class ContenidoConfiguracion(QWidget):
     
     def ver_estadisticas(self):
         """Abre ventana de estadísticas globales"""
-        from cliente.gui_estadisticas import VentanaEstadisticas
-        dialogo = VentanaEstadisticas(self)
-        dialogo.exec()
+        from cliente.gui_estadisticas import ContenidoEstadisticas
+        contenido = ContenidoEstadisticas(self.parent_window)
+        self.parent_window.navegar_a_pantalla(contenido)
     
     def editar_perfil(self):
         """Editar perfil"""
-        from cliente.gui_editar_perfil import VentanaEditarPerfil
+        from cliente.gui_editar_perfil import ContenidoEditarPerfil
         
-        dialogo = VentanaEditarPerfil(self.usuario_data, self)
-        dialogo.perfil_actualizado.connect(self.on_perfil_actualizado)
-        
-        if dialogo.exec():
-            print("Perfil actualizado")
+        contenido = ContenidoEditarPerfil(self.usuario_data, self.parent_window)
+        contenido.perfil_actualizado.connect(self.on_perfil_actualizado)
+        self.parent_window.navegar_a_pantalla(contenido)
     
     def on_perfil_actualizado(self, datos_nuevos):
         """Callback cuando se actualiza el perfil"""
@@ -335,15 +333,18 @@ class ContenidoConfiguracion(QWidget):
     
     def cambiar_password(self):
         """Cambiar contraseña"""
-        from cliente.gui_cambiar_password import VentanaCambiarPassword
+        from cliente.gui_cambiar_password import ContenidoCambiarPassword
         
-        dialogo = VentanaCambiarPassword(self.usuario_data, self)
-        
-        if dialogo.exec():
-            print("Contraseña cambiada exitosamente")
+        contenido = ContenidoCambiarPassword(self.usuario_data, self.parent_window)
+        self.parent_window.navegar_a_pantalla(contenido)
     
     def cerrar_sesion(self):
         """Cerrar sesión"""
+        from cliente.dialogos import confirmar_cerrar_sesion
+        
+        if not confirmar_cerrar_sesion(self):
+            return
+        
         if self.parent_window:
             self.parent_window.cerrar_sesion()
 

@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout,
+    QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QStackedWidget, QWidget
 )
 from PyQt6.QtCore import Qt, QTimer
@@ -7,32 +7,67 @@ from PyQt6.QtCore import Qt, QTimer
 from cliente.estilos import *
 
 
-class VentanaCambiarPassword(QDialog):
-    """Ventana para cambiar contraseña con verificación por email"""
+class ContenidoCambiarPassword(QWidget):
+    """Pantalla para cambiar contraseña con verificación por email"""
     
     def __init__(self, usuario_data, parent=None):
         super().__init__(parent)
+        self.parent_window = parent
         self.usuario_data = usuario_data
         self.codigo_enviado = None
         self.inicializar_ui()
     
     def inicializar_ui(self):
         """Configura la interfaz"""
-        self.setWindowTitle("Cambiar Contraseña")
-        self.setFixedSize(450, 550)
-        self.setStyleSheet(ESTILO_VENTANA)
-        self.setModal(True)
-        
         layout_principal = QVBoxLayout()
-        layout_principal.setContentsMargins(30, 30, 30, 30)
-        layout_principal.setSpacing(20)
+        layout_principal.setContentsMargins(0, 0, 0, 0)
+        layout_principal.setSpacing(0)
         self.setLayout(layout_principal)
         
-        # Título
+        header = QFrame()
+        header.setStyleSheet(f"""
+            QFrame {{
+                background-color: {COLORES['superficie']};
+                padding: 20px;
+                border-bottom: 1px solid {COLORES['borde']};
+            }}
+        """)
+        layout_header = QVBoxLayout()
+        header.setLayout(layout_header)
+        
+        btn_volver = QPushButton("← Volver")
+        btn_volver.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORES['superficie_clara']};
+                color: {COLORES['texto']};
+                border: 1px solid {COLORES['borde']};
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 14px;
+                font-weight: 500;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORES['primario']};
+                color: white;
+                border: 1px solid {COLORES['primario']};
+            }}
+        """)
+        btn_volver.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_volver.clicked.connect(self.volver_atras)
+        btn_volver.setFixedWidth(110)
+        
         label_titulo = QLabel("Cambiar Contraseña")
         label_titulo.setStyleSheet(ESTILO_TITULO)
-        label_titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout_principal.addWidget(label_titulo)
+        
+        layout_header.addWidget(btn_volver)
+        layout_header.addWidget(label_titulo)
+        layout_principal.addWidget(header)
+        
+        contenido = QWidget()
+        layout_contenido = QVBoxLayout()
+        layout_contenido.setContentsMargins(30, 30, 30, 30)
+        layout_contenido.setSpacing(20)
+        contenido.setLayout(layout_contenido)
         
         # Stack para las 2 pantallas
         self.stack = QStackedWidget()
@@ -46,8 +81,10 @@ class VentanaCambiarPassword(QDialog):
         self.stack.addWidget(self.pantalla_solicitar)
         self.stack.addWidget(self.pantalla_codigo)
         
-        layout_principal.addWidget(self.stack)
-        layout_principal.addStretch()
+        layout_contenido.addWidget(self.stack)
+        layout_contenido.addStretch()
+        
+        layout_principal.addWidget(contenido)
     
     def crear_pantalla_solicitar(self):
         """Primera pantalla: enviar código por email"""
@@ -122,7 +159,7 @@ class VentanaCambiarPassword(QDialog):
             }}
         """)
         btn_cancelar_1.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_cancelar_1.clicked.connect(self.reject)
+        btn_cancelar_1.clicked.connect(self.volver_atras)
         
         layout.addWidget(label_desc)
         layout.addWidget(frame)
@@ -238,8 +275,12 @@ class VentanaCambiarPassword(QDialog):
     
     def enviar_codigo(self):
         """Envía el código por email"""
+        from cliente.dialogos import confirmar_cambio_password
         from cliente.datos_local import obtener_email_usuario
         from cliente.email_service import enviar_codigo_recuperacion
+        
+        if not confirmar_cambio_password(self):
+            return
         
         email = obtener_email_usuario(self.usuario_data["usuario"])
         
@@ -303,7 +344,7 @@ class VentanaCambiarPassword(QDialog):
         
         if exito:
             self.mostrar_mensaje(2, "Contraseña cambiada exitosamente", "exito")
-            QTimer.singleShot(1500, self.accept)
+            QTimer.singleShot(1500, self.volver_atras)
         else:
             self.btn_cambiar.setEnabled(True)
             self.mostrar_mensaje(2, mensaje, "error")
@@ -320,4 +361,8 @@ class VentanaCambiarPassword(QDialog):
             label.setStyleSheet(ESTILO_EXITO)
         
         label.setVisible(True)
-
+    
+    def volver_atras(self):
+        """Vuelve a la pantalla anterior"""
+        if self.parent_window:
+            self.parent_window.volver_atras()

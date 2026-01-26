@@ -79,6 +79,7 @@ class VentanaMainMenu(QMainWindow):
         }
         
         self.botones_nav = []
+        self.historial_navegacion = []
         self.inicializar_ui()
     
     def inicializar_ui(self):
@@ -184,6 +185,34 @@ class VentanaMainMenu(QMainWindow):
         self.ventana_login = VentanaLogin()
         self.ventana_login.show()
         self.close()
+    
+    def navegar_a_pantalla(self, pantalla_widget):
+        """Navega a una pantalla interna guardando el historial"""
+        indice_actual = self.stack_pantallas.currentIndex()
+        self.historial_navegacion.append(indice_actual)
+        
+        self.stack_pantallas.addWidget(pantalla_widget)
+        nuevo_indice = self.stack_pantallas.count() - 1
+        self.stack_pantallas.setCurrentIndex(nuevo_indice)
+        
+        for boton in self.botones_nav:
+            boton.set_activo(False)
+    
+    def volver_atras(self):
+        """Vuelve a la pantalla anterior"""
+        if not self.historial_navegacion:
+            return
+        
+        widget_actual = self.stack_pantallas.currentWidget()
+        indice_anterior = self.historial_navegacion.pop()
+        
+        self.stack_pantallas.setCurrentIndex(indice_anterior)
+        
+        self.stack_pantallas.removeWidget(widget_actual)
+        widget_actual.deleteLater()
+        
+        for i, boton in enumerate(self.botones_nav):
+            boton.set_activo(i == indice_anterior)
 
 
 

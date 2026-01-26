@@ -241,7 +241,7 @@ class ContenidoBusqueda(QWidget):
         """Abre un perfil en modo lectura para otro usuario"""
         try:
             from cliente.datos_local import cargar_usuarios, obtener_amigos_completos
-            from cliente.gui_perfil_publico import VentanaPerfilPublico
+            from cliente.gui_perfil_publico import ContenidoPerfilPublico
 
             usuarios = cargar_usuarios()
             username = usuario_data["usuario"]
@@ -256,8 +256,8 @@ class ContenidoBusqueda(QWidget):
                     "email": datos.get("email", ""),
                     "amigos": amigos,
                 }
-                self.ventana_perfil = VentanaPerfilPublico(self.usuario_data, perfil_data, self)
-                self.ventana_perfil.show()
+                contenido = ContenidoPerfilPublico(self.usuario_data, perfil_data, self.parent_window)
+                self.parent_window.navegar_a_pantalla(contenido)
         except Exception:
             return
 

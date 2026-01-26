@@ -3,12 +3,11 @@
     "nombre": "Mathias",
     "apellido": "Calvo",
     "usuario": "mathias",
-    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$ZMwZo/R+TwnB2LuXMuY8hw$vcwlvuLWHq5F+JPmL+As7a/jAJNwrdKNWhkxazJ5Oek",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$as25t3audQ4BYOw9h5DS+g$f6lOVPlJ1pMRSx4DjqTF3lEmUcNabV/bCivU+TuHPQY",
     "email": "praraora@gmail.com",
     "foto": "C:/Users/Administrator/Pictures/Wallpaper 11.png",
     "amigos": [
       "juanp",
-      "ana_lopez",
       "luisi"
     ]
   },
@@ -20,7 +19,6 @@
     "email": "ana.lopez@example.com",
     "foto": null,
     "amigos": [
-      "mathias",
       "luisi"
     ]
   },
@@ -44,9 +42,9 @@
     "email": "ashserey@gmail.com",
     "foto": null,
     "amigos": [
-      "mathias",
       "juanp",
-      "ana_lopez"
+      "ana_lopez",
+      "mathias"
     ]
   },
   "BANANOMAN": {
