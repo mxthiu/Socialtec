@@ -157,6 +157,9 @@ dmypy.json
 Thumbs.db
 
 # Python cache files
+__pycache__/
+*/__pycache__/
+**/__pycache__/
 cliente/__pycache__/gui_login.cpython-314.pyc
 
 # Local data files (if needed to exclude)
