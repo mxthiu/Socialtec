@@ -245,8 +245,8 @@ def info_grafo(grafo: Grafo) -> str:
     promedio = (2 * m) / n if n > 0 else 0
     
     return (
-        f"📊 Info del Grafo:\n"
-        f"  • Usuarios: {n}\n"
-        f"  • Amistades: {m}\n"
-        f"  • Promedio de amigos: {promedio:.2f}"
+        f" Info del Grafo:\n"
+        f"  * Usuarios: {n}\n"
+        f"  * Amistades: {m}\n"
+        f"  * Promedio de amigos: {promedio:.2f}"
     )
