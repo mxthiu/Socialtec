@@ -61,6 +61,9 @@ class ServidorTCP:
         host: str = SERVER_HOST,
         port: int = SERVER_PORT,
         on_log: Optional[Callable[[str], None]] = None,
+        on_client_connect: Optional[Callable[[int, str], None]] = None,
+        on_client_disconnect: Optional[Callable[[int], None]] = None,
+        on_error: Optional[Callable[[str], None]] = None,
     ):
         """
         Args:
@@ -68,11 +71,17 @@ class ServidorTCP:
             host: IP donde escuchar
             port: Puerto TCP
             on_log: Callback para logs (ej. para GUI)
+            on_client_connect: Callback(cliente_id, addr) al conectar cliente
+            on_client_disconnect: Callback(cliente_id) al desconectar cliente
+            on_error: Callback(error_msg) al ocurrir error
         """
         self.grafo = grafo
         self.host = host
         self.port = port
         self.on_log = on_log or (lambda msg: print(f"[SERVER] {msg}"))
+        self.on_client_connect = on_client_connect
+        self.on_client_disconnect = on_client_disconnect
+        self.on_error = on_error
 
         self._socket: Optional[socket.socket] = None
         self._activo = False
@@ -221,6 +230,10 @@ class ServidorTCP:
                     cliente_id = self._contador_clientes
 
                 self._log(f"[CONNECT] Cliente #{cliente_id} conectado desde {addr}")
+                
+                # Callback: cliente conectado
+                if self.on_client_connect:
+                    self.on_client_connect(cliente_id, addr[0])
 
                 # Crear thread para manejar este cliente
                 thread_cliente = threading.Thread(
@@ -240,7 +253,10 @@ class ServidorTCP:
                 break
             except Exception as e:
                 if self._activo:
-                    self._log(f"[ERROR] Error aceptando conexion: {e}")
+                    msg_error = f"Error aceptando conexion: {e}"
+                    self._log(f"[ERROR] {msg_error}")
+                    if self.on_error:
+                        self.on_error(msg_error)
 
     # =========================
     # DESPACHO DE MENSAJES
@@ -297,6 +313,8 @@ class ServidorTCP:
         
         except Exception as e:
             self._log(f"[ERROR] Error despachando {msg.type}: {e}")
+            if self.on_error:
+                self.on_error(f"Error despachando {msg.type}: {e}")
             return Response(
                 ok=False,
                 message=f"Error procesando {msg.type}: {str(e)}",
@@ -503,3 +521,7 @@ class ServidorTCP:
             except:
                 pass
             self._log(f"[DISCONNECT] Cliente #{cliente_id} desconectado")
+            
+            # Callback: cliente desconectado
+            if self.on_client_disconnect:
+                self.on_client_disconnect(cliente_id)
