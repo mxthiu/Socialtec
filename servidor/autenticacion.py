@@ -6,6 +6,17 @@ Se usa en el servidor para:
   - Registrar nuevos usuarios (hashear password antes de guardar)
   - Login (verificar password recibido contra hash almacenado)
 
+OJO - IMPORTANTE:
+=================
+Este módulo es INDEPENDIENTE. NO necesitas tocar nada del servidor TCP (servidor_tcp.py)
+ni de persistencia (persistencia.py) para implementar esto. Solo implementa las funciones
+de hashing/verificación aquí abajo. La integración con el servidor se hará en ramas futuras.
+De las cuales estoy encargado yo.
+
+Este módulo funciona standalone (osea que es un código independiente): 
+puedes probarlo directamente con el script de testing
+que está al final de estas instrucciones.
+
 INSTRUCCIONES PARA IMPLEMENTAR:
 ================================
 
@@ -56,9 +67,8 @@ Crea un script test_autenticacion.py:
 
 NOTAS:
 ======
-- Argon2 es más seguro que bcrypt (ganador Password Hashing Competition 2015)
+- Argon2 es más seguro que bcrypt
 - Los hashes de Argon2 empiezan con $argon2...
-- Los hashes de bcrypt empiezan con $2b$ o $2a$
 - NUNCA guardes passwords en texto plano
 - El hash es unidireccional (no se puede "desencriptar")
 """
@@ -197,7 +207,7 @@ def validar_login(
 
 
 # =========================
-# Helpers opcionales
+# Helpers para testing
 # =========================
 
 def cambiar_password(
