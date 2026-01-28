@@ -25,6 +25,12 @@ from typing import Callable, Dict, Optional
 
 from grafo.grafo import Grafo
 from utils.config import SERVER_HOST, SERVER_PORT, SOCKET_BACKLOG, SOCKET_BUFFER_SIZE
+from utils.protocolo import (
+    Message,
+    Response,
+    recv_message,
+    send_response,
+)
 
 
 class ServidorTCPError(Exception):
@@ -188,19 +194,40 @@ class ServidorTCP:
         self, cliente_id: int, conn: socket.socket, addr: tuple[str, int]
     ) -> None:
         """
-        Atiende las peticiones de un cliente hasta que se desconecta.
-        Placeholder para bloques siguientes.
+        Atiende las peticiones de un cliente en un loop hasta que se desconecta.
+        Cada cliente corre en su propio thread independientemente.
         """
         try:
             while self._activo:
                 try:
-                    # Placeholder: bloques siguientes agregaran despacho
-                    break
+                    # Recibir mensaje del cliente
+                    msg = recv_message(conn)
+                    self._log(
+                        f"[RECV] Cliente #{cliente_id}: {msg.type} | payload={msg.payload}"
+                    )
+
+                    # Placeholder: despacho real en bloques siguientes
+                    respuesta = Response(
+                        ok=True,
+                        message=f"Tipo {msg.type} recibido (aun sin procesamiento)",
+                        request_id=msg.request_id,
+                    )
+
+                    # Enviar respuesta
+                    send_response(conn, respuesta)
+                    self._log(f"[SEND] Cliente #{cliente_id}: respuesta enviada")
+
                 except ConnectionError:
-                    # Cliente desconectado
+                    # Cliente desconectado (recv/send fallo)
                     break
                 except Exception as e:
                     self._log(f"[WARN] Error procesando cliente #{cliente_id}: {e}")
+                    # Intentar enviar error al cliente
+                    try:
+                        resp = Response(ok=False, message=f"Error interno: {e}")
+                        send_response(conn, resp)
+                    except:
+                        pass
                     break
 
         finally:
