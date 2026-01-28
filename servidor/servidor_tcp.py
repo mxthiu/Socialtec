@@ -243,6 +243,219 @@ class ServidorTCP:
                     self._log(f"[ERROR] Error aceptando conexion: {e}")
 
     # =========================
+    # DESPACHO DE MENSAJES
+    # =========================
+    def _despachar_mensaje(self, msg: Message, cliente_id: int) -> Response:
+        """
+        Despacha el mensaje recibido al handler correspondiente.
+        
+        Args:
+            msg: Mensaje recibido del cliente
+            cliente_id: ID del cliente que envió el mensaje
+        
+        Returns:
+            Response a enviar al cliente
+        """
+        try:
+            # PING - health check
+            if msg.type == "PING":
+                return self._handle_ping(msg)
+            
+            # Operaciones de grafo
+            elif msg.type == "SEARCH_USER":
+                return self._handle_search_user(msg)
+            elif msg.type == "ADD_FRIEND":
+                return self._handle_add_friend(msg)
+            elif msg.type == "REMOVE_FRIEND":
+                return self._handle_remove_friend(msg)
+            elif msg.type == "GET_STATS":
+                return self._handle_get_stats(msg)
+            elif msg.type == "GET_PATH":
+                return self._handle_get_path(msg)
+            
+            # Autenticacion (rama 9 - stubs por ahora)
+            elif msg.type == "LOGIN":
+                return Response(
+                    ok=False,
+                    message="LOGIN no implementado aun (rama 9 en progreso)",
+                    request_id=msg.request_id,
+                )
+            elif msg.type == "REGISTER":
+                return Response(
+                    ok=False,
+                    message="REGISTER no implementado aun (rama 9 en progreso)",
+                    request_id=msg.request_id,
+                )
+            
+            # Tipo desconocido
+            else:
+                return Response(
+                    ok=False,
+                    message=f"Tipo de mensaje desconocido: {msg.type}",
+                    request_id=msg.request_id,
+                )
+        
+        except Exception as e:
+            self._log(f"[ERROR] Error despachando {msg.type}: {e}")
+            return Response(
+                ok=False,
+                message=f"Error procesando {msg.type}: {str(e)}",
+                request_id=msg.request_id,
+            )
+
+    def _handle_ping(self, msg: Message) -> Response:
+        """Handler para PING - health check."""
+        return Response(
+            ok=True,
+            message="PONG",
+            request_id=msg.request_id,
+        )
+
+    def _handle_search_user(self, msg: Message) -> Response:
+        """
+        Handler para SEARCH_USER.
+        Payload esperado: {"username": str}
+        """
+        username = msg.payload.get("username")
+        if not username:
+            return Response(
+                ok=False,
+                message="Falta parametro 'username'",
+                request_id=msg.request_id,
+            )
+        
+        usuario = self._grafo_buscar_usuario(username)
+        if usuario:
+            return Response(
+                ok=True,
+                message="Usuario encontrado",
+                data=usuario,
+                request_id=msg.request_id,
+            )
+        else:
+            return Response(
+                ok=False,
+                message=f"Usuario '{username}' no encontrado",
+                request_id=msg.request_id,
+            )
+
+    def _handle_add_friend(self, msg: Message) -> Response:
+        """
+        Handler para ADD_FRIEND.
+        Payload esperado: {"user1": str, "user2": str}
+        """
+        user1 = msg.payload.get("user1")
+        user2 = msg.payload.get("user2")
+        
+        if not user1 or not user2:
+            return Response(
+                ok=False,
+                message="Faltan parametros 'user1' o 'user2'",
+                request_id=msg.request_id,
+            )
+        
+        exito = self._grafo_agregar_amistad(user1, user2)
+        if exito:
+            return Response(
+                ok=True,
+                message=f"Amistad agregada: {user1} <-> {user2}",
+                request_id=msg.request_id,
+            )
+        else:
+            return Response(
+                ok=False,
+                message=f"No se pudo agregar amistad (usuarios no existen?)",
+                request_id=msg.request_id,
+            )
+
+    def _handle_remove_friend(self, msg: Message) -> Response:
+        """
+        Handler para REMOVE_FRIEND.
+        Payload esperado: {"user1": str, "user2": str}
+        """
+        user1 = msg.payload.get("user1")
+        user2 = msg.payload.get("user2")
+        
+        if not user1 or not user2:
+            return Response(
+                ok=False,
+                message="Faltan parametros 'user1' o 'user2'",
+                request_id=msg.request_id,
+            )
+        
+        exito = self._grafo_eliminar_amistad(user1, user2)
+        if exito:
+            return Response(
+                ok=True,
+                message=f"Amistad eliminada: {user1} <-> {user2}",
+                request_id=msg.request_id,
+            )
+        else:
+            return Response(
+                ok=False,
+                message=f"No se pudo eliminar amistad (no existe?)",
+                request_id=msg.request_id,
+            )
+
+    def _handle_get_stats(self, msg: Message) -> Response:
+        """
+        Handler para GET_STATS.
+        Payload esperado: {"username": str}
+        """
+        username = msg.payload.get("username")
+        if not username:
+            return Response(
+                ok=False,
+                message="Falta parametro 'username'",
+                request_id=msg.request_id,
+            )
+        
+        stats = self._grafo_obtener_estadisticas(username)
+        if stats:
+            return Response(
+                ok=True,
+                message="Estadisticas obtenidas",
+                data=stats,
+                request_id=msg.request_id,
+            )
+        else:
+            return Response(
+                ok=False,
+                message=f"Usuario '{username}' no encontrado",
+                request_id=msg.request_id,
+            )
+
+    def _handle_get_path(self, msg: Message) -> Response:
+        """
+        Handler para GET_PATH.
+        Payload esperado: {"origen": str, "destino": str}
+        """
+        origen = msg.payload.get("origen")
+        destino = msg.payload.get("destino")
+        
+        if not origen or not destino:
+            return Response(
+                ok=False,
+                message="Faltan parametros 'origen' o 'destino'",
+                request_id=msg.request_id,
+            )
+        
+        camino = self._grafo_encontrar_camino(origen, destino)
+        if camino:
+            return Response(
+                ok=True,
+                message=f"Camino encontrado ({len(camino)} nodos)",
+                data={"camino": camino},
+                request_id=msg.request_id,
+            )
+        else:
+            return Response(
+                ok=False,
+                message=f"No existe camino entre '{origen}' y '{destino}'",
+                request_id=msg.request_id,
+            )
+
+    # =========================
     # Handler de cliente individual
     # =========================
     def _manejar_cliente(
@@ -261,12 +474,8 @@ class ServidorTCP:
                         f"[RECV] Cliente #{cliente_id}: {msg.type} | payload={msg.payload}"
                     )
 
-                    # Placeholder: despacho real en bloques siguientes
-                    respuesta = Response(
-                        ok=True,
-                        message=f"Tipo {msg.type} recibido (aun sin procesamiento)",
-                        request_id=msg.request_id,
-                    )
+                    # Despachar mensaje según tipo
+                    respuesta = self._despachar_mensaje(msg, cliente_id)
 
                     # Enviar respuesta
                     send_response(conn, respuesta)
