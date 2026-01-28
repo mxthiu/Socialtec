@@ -21,7 +21,7 @@ from __future__ import annotations
 import socket
 import threading
 from dataclasses import dataclass
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from grafo.grafo import Grafo
 from utils.config import SERVER_HOST, SERVER_PORT, SOCKET_BACKLOG, SOCKET_BUFFER_SIZE
@@ -146,6 +146,61 @@ class ServidorTCP:
 
     def esta_activo(self) -> bool:
         return self._activo
+
+    # =========================
+    # ACCESO THREAD-SAFE AL GRAFO
+    # =========================
+
+    def _acceso_grafo_seguro(self, operacion: Callable[[], Any]) -> Any:
+        """
+        Wrapper thread-safe para operaciones sobre el grafo compartido.
+        Uso: resultado = self._acceso_grafo_seguro(lambda: self.grafo.buscar_usuario("X"))
+        
+        Args:
+            operacion: Función sin argumentos que accede al grafo
+        
+        Returns:
+            Resultado de la operación
+        """
+        with self._lock:
+            return operacion()
+
+    def _grafo_buscar_usuario(self, username: str) -> Optional[Dict]:
+        """Thread-safe: buscar usuario en el grafo."""
+        with self._lock:
+            return self.grafo.buscar_usuario(username)
+
+    def _grafo_agregar_amistad(self, user1: str, user2: str) -> bool:
+        """Thread-safe: agregar amistad en el grafo."""
+        with self._lock:
+            return self.grafo.agregar_amistad(user1, user2)
+
+    def _grafo_eliminar_amistad(self, user1: str, user2: str) -> bool:
+        """Thread-safe: eliminar amistad en el grafo."""
+        with self._lock:
+            return self.grafo.eliminar_amistad(user1, user2)
+
+    def _grafo_obtener_estadisticas(self, username: str) -> Optional[Dict]:
+        """Thread-safe: obtener estadisticas de un usuario."""
+        with self._lock:
+            # Asume que tenemos una funcion en grafo o algoritmos
+            usuario = self.grafo.buscar_usuario(username)
+            if not usuario:
+                return None
+            # Calcular estadisticas basicas
+            amigos = self.grafo.obtener_amigos(username)
+            return {
+                "username": username,
+                "num_amigos": len(amigos),
+                "amigos": amigos,
+            }
+
+    def _grafo_encontrar_camino(self, origen: str, destino: str) -> Optional[List[str]]:
+        """Thread-safe: encontrar camino entre dos usuarios."""
+        with self._lock:
+            # Importar algoritmo si es necesario
+            from grafo.algoritmos import encontrar_camino_bfs
+            return encontrar_camino_bfs(self.grafo, origen, destino)
 
     # =========================
     # Loop principal: aceptar conexiones
