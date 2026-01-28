@@ -319,12 +319,12 @@ class VentanaRegistro(QMainWindow):
             self.mostrar_mensaje("Las contraseñas no coinciden", "error")
             return
         
-        from cliente.datos_local import registrar_usuario
+        from cliente.auth_client import registrar_usuario
         
         self.mostrar_mensaje("Creando cuenta...", "exito")
         self.btn_registrar.setEnabled(False)
         
-        exito, mensaje = registrar_usuario(nombre, apellido, usuario, password, email, self.foto_seleccionada)
+        exito, mensaje = registrar_usuario(usuario, password, nombre, apellido, email, self.foto_seleccionada)
         
         if exito:
             QTimer.singleShot(1000, self.registro_exitoso)

@@ -11,6 +11,7 @@ from cliente.estilos import *
 from cliente.gui_perfil_contenido import ContenidoPerfil
 from cliente.gui_busqueda import ContenidoBusqueda
 from cliente.gui_amigos import ContenidoAmigos
+# from cliente.gui_grafo import ContenidoGrafo  # TODO: Crear este módulo
 from cliente.gui_configuracion import ContenidoConfiguracion
 
 
@@ -35,7 +36,7 @@ class BotonNavegacion(QPushButton):
                     color: {COLORES['primario']};
                     border: none;
                     padding: 10px;
-                    font-size: 18px;
+                    font-size: 15px;
                     font-weight: bold;
                 }}
             """)
@@ -46,7 +47,7 @@ class BotonNavegacion(QPushButton):
                     color: {COLORES['texto_secundario']};
                     border: none;
                     padding: 10px;
-                    font-size: 18px;
+                    font-size: 15px;
                 }}
                 QPushButton:hover {{
                     color: {COLORES['texto']};
@@ -105,13 +106,15 @@ class VentanaMainMenu(QMainWindow):
         self.pantalla_perfil = ContenidoPerfil(self.usuario_data, self)
         self.pantalla_busqueda = ContenidoBusqueda(self.usuario_data, self)
         self.pantalla_amigos = ContenidoAmigos(self.usuario_data, self)
+        # self.pantalla_grafo = ContenidoGrafo(self.usuario_data, self)  # TODO: Implementar
         self.pantalla_config = ContenidoConfiguracion(self.usuario_data, self)
         
         # Agregar pantallas al stack
         self.stack_pantallas.addWidget(self.pantalla_perfil)      # índice 0
         self.stack_pantallas.addWidget(self.pantalla_busqueda)    # índice 1
         self.stack_pantallas.addWidget(self.pantalla_amigos)      # índice 2
-        self.stack_pantallas.addWidget(self.pantalla_config)      # índice 3
+        # self.stack_pantallas.addWidget(self.pantalla_grafo)     # índice 3 - TODO
+        self.stack_pantallas.addWidget(self.pantalla_config)      # índice 3 (antes 4)
         
         layout_principal.addWidget(self.stack_pantallas)
         
@@ -142,7 +145,8 @@ class VentanaMainMenu(QMainWindow):
             ("", "Perfil", 0),
             ("", "Buscar", 1),
             ("", "Amigos", 2),
-            ("", "Config", 3),
+            # ("", "Grafo", 3),  # TODO: Implementar
+            ("", "Config", 3),  # Cambió de índice 4 a 3
         ]
         
         for icono, texto, indice in botones_info:
@@ -174,6 +178,7 @@ class VentanaMainMenu(QMainWindow):
 
         self.pantalla_perfil.actualizar_datos()
         self.pantalla_amigos.actualizar_datos()
+        self.pantalla_grafo.actualizar_datos()
     
     def cerrar_sesion(self):
         """Cierra sesión y vuelve al login"""

@@ -149,12 +149,12 @@ class VentanaLogin(QMainWindow):
             self.mostrar_mensaje("La contraseña debe tener al menos 4 caracteres", tipo="error")
             return
         
-        from cliente.datos_local import validar_login
+        from cliente.auth_client import login_usuario
         
         self.mostrar_mensaje("Iniciando sesión...", tipo="exito")
         self.btn_login.setEnabled(False)
         
-        exito, datos_usuario = validar_login(usuario, password)
+        exito, datos_usuario = login_usuario(usuario, password)
         
         if exito:
             self.datos_usuario = datos_usuario
