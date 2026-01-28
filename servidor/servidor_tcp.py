@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import socket
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
 from grafo.grafo import Grafo
@@ -31,6 +32,11 @@ from utils.protocolo import (
     recv_message,
     send_response,
 )
+
+# Constantes para manejo robusto de conexiones
+SOCKET_TIMEOUT = 60  # Segundos antes de timeout en socket
+HEARTBEAT_INTERVAL = 30  # Segundos entre checks de heartbeat
+GRACEFUL_SHUTDOWN_TIMEOUT = 5  # Segundos para esperar threads
 
 
 class ServidorTCPError(Exception):
@@ -44,6 +50,7 @@ class ClienteInfo:
     addr: tuple[str, int]
     thread: threading.Thread
     usuario_logueado: Optional[str] = None
+    ultimo_mensaje: datetime = field(default_factory=datetime.now)
 
 
 class ServidorTCP:
@@ -109,6 +116,7 @@ class ServidorTCP:
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self._socket.settimeout(SOCKET_TIMEOUT)  # Timeout para accept()
             self._socket.bind((self.host, self.port))
             self._socket.listen(SOCKET_BACKLOG)
             self._activo = True
@@ -128,6 +136,7 @@ class ServidorTCP:
     def detener(self) -> None:
         """
         Detiene el servidor y cierra todas las conexiones.
+        Intenta graceful shutdown esperando a los threads.
         """
         if not self._activo:
             return
@@ -139,25 +148,68 @@ class ServidorTCP:
         if self._socket:
             try:
                 self._socket.close()
-            except:
-                pass
+            except Exception as e:
+                self._log(f"[WARN] Error cerrando socket principal: {e}")
 
         # Cerrar conexiones de clientes
         with self._lock:
             for cliente_id, info in list(self._clientes.items()):
                 try:
-                    info.conn.close()
+                    # Intentar shutdown gracioso (FIN)
+                    info.conn.shutdown(socket.SHUT_RDWR)
                 except:
                     pass
+                try:
+                    info.conn.close()
+                except Exception as e:
+                    self._log(f"[WARN] Error cerrando cliente #{cliente_id}: {e}")
             self._clientes.clear()
+
+        # Esperar a threads de clientes (graceful shutdown)
+        if self._thread_aceptar:
+            try:
+                self._thread_aceptar.join(timeout=GRACEFUL_SHUTDOWN_TIMEOUT)
+            except Exception as e:
+                self._log(f"[WARN] Error esperando threads: {e}")
 
         self._log("[OK] Servidor detenido")
 
     def esta_activo(self) -> bool:
         return self._activo
 
+    def _cliente_desconectado_por_timeout(self, cliente_id: int) -> bool:
+        """
+        Detecta si un cliente se desconectó por timeout de inactividad.
+        
+        Args:
+            cliente_id: ID del cliente a verificar
+        
+        Returns:
+            True si pasó más de SOCKET_TIMEOUT segundos sin mensaje
+        """
+        with self._lock:
+            if cliente_id not in self._clientes:
+                return False
+            
+            info = self._clientes[cliente_id]
+            tiempo_inactivo = (datetime.now() - info.ultimo_mensaje).total_seconds()
+            
+            # Si supera timeout, cliente está inactivo
+            return tiempo_inactivo > SOCKET_TIMEOUT
+
+    def _actualizar_timestamp_cliente(self, cliente_id: int) -> None:
+        """
+        Actualiza el timestamp del último mensaje de un cliente.
+        
+        Args:
+            cliente_id: ID del cliente
+        """
+        with self._lock:
+            if cliente_id in self._clientes:
+                self._clientes[cliente_id].ultimo_mensaje = datetime.now()
+
     # =========================
-    # ACCESO THREAD-SAFE AL GRAFO
+    # Acceso thread-safe al grafo
     # =========================
 
     def _acceso_grafo_seguro(self, operacion: Callable[[], Any]) -> Any:
@@ -482,12 +534,20 @@ class ServidorTCP:
         """
         Atiende las peticiones de un cliente en un loop hasta que se desconecta.
         Cada cliente corre en su propio thread independientemente.
+        Maneja timeouts, desconexiones inesperadas y errores de socket.
         """
         try:
+            # Configurar timeout en socket del cliente
+            conn.settimeout(SOCKET_TIMEOUT)
+            
             while self._activo:
                 try:
-                    # Recibir mensaje del cliente
+                    # Recibir mensaje del cliente (bloqueante con timeout)
                     msg = recv_message(conn)
+                    
+                    # Actualizar timestamp de actividad
+                    self._actualizar_timestamp_cliente(cliente_id)
+                    
                     self._log(
                         f"[RECV] Cliente #{cliente_id}: {msg.type} | payload={msg.payload}"
                     )
@@ -499,12 +559,28 @@ class ServidorTCP:
                     send_response(conn, respuesta)
                     self._log(f"[SEND] Cliente #{cliente_id}: respuesta enviada")
 
-                except ConnectionError:
-                    # Cliente desconectado (recv/send fallo)
+                except socket.timeout:
+                    # Timeout esperado, cliente inactivo
+                    self._log(f"[TIMEOUT] Cliente #{cliente_id} inactivo (>180s)")
                     break
+                    
+                except ConnectionResetError:
+                    # Cliente desconectó abruptamente
+                    self._log(f"[DISCONNECT] Cliente #{cliente_id} reset por peer")
+                    break
+                    
+                except BrokenPipeError:
+                    # No se puede escribir al socket (cliente desconectó)
+                    self._log(f"[DISCONNECT] Cliente #{cliente_id} pipe roto")
+                    break
+                    
+                except ConnectionError:
+                    # Error generico de conexión
+                    break
+                    
                 except Exception as e:
+                    # Error generico al procesar
                     self._log(f"[WARN] Error procesando cliente #{cliente_id}: {e}")
-                    # Intentar enviar error al cliente
                     try:
                         resp = Response(ok=False, message=f"Error interno: {e}")
                         send_response(conn, resp)
@@ -512,14 +588,22 @@ class ServidorTCP:
                         pass
                     break
 
+        except Exception as e:
+            # Error al configurar socket o en el loop principal
+            self._log(f"[ERROR] Error grave en cliente #{cliente_id}: {e}")
+            if self.on_error:
+                self.on_error(f"Error en cliente #{cliente_id}: {e}")
+                
         finally:
-            # Cleanup
+            # Cleanup garantizado
             with self._lock:
                 self._clientes.pop(cliente_id, None)
+            
             try:
                 conn.close()
             except:
                 pass
+                
             self._log(f"[DISCONNECT] Cliente #{cliente_id} desconectado")
             
             # Callback: cliente desconectado
