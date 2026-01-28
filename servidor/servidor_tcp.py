@@ -1,11 +1,11 @@
 """
-Servidor TCP con soporte para múltiples clientes usando threading.
+Servidor TCP con soporte para multiples clientes usando threading.
 
 Arquitectura:
   - Escucha en host/puerto configurado
   - Acepta conexiones y crea un hilo por cliente
   - Coordina acceso compartido al grafo con locks
-  - Despacha operaciones según utils.protocolo
+  - Despacha operaciones segun utils.protocolo
 
 Uso:
     from servidor.servidor_tcp import ServidorTCP
@@ -20,23 +20,23 @@ from __future__ import annotations
 
 import socket
 import threading
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Callable, Dict, Optional
 
 from grafo.grafo import Grafo
+from grafo.algoritmos import (
+    encontrar_camino_bfs,
+    calcular_estadisticas,
+    estadisticas_como_dict,
+)
 from utils.config import SERVER_HOST, SERVER_PORT, SOCKET_BACKLOG, SOCKET_BUFFER_SIZE
 from utils.protocolo import (
     Message,
     Response,
     recv_message,
     send_response,
+    MsgType,
 )
-
-# Constantes para manejo robusto de conexiones
-SOCKET_TIMEOUT = 60  # Segundos antes de timeout en socket
-HEARTBEAT_INTERVAL = 30  # Segundos entre checks de heartbeat
-GRACEFUL_SHUTDOWN_TIMEOUT = 5  # Segundos para esperar threads
 
 
 class ServidorTCPError(Exception):
@@ -45,17 +45,16 @@ class ServidorTCPError(Exception):
 
 @dataclass
 class ClienteInfo:
-    """Información de un cliente conectado."""
+    """Informacion de un cliente conectado."""
     conn: socket.socket
     addr: tuple[str, int]
     thread: threading.Thread
     usuario_logueado: Optional[str] = None
-    ultimo_mensaje: datetime = field(default_factory=datetime.now)
 
 
 class ServidorTCP:
     """
-    Servidor TCP que maneja múltiples clientes concurrentemente.
+    Servidor TCP que maneja multiples clientes concurrentemente.
     
     Thread-safety:
       - self._lock protege acceso al grafo y estructura de clientes
@@ -68,9 +67,6 @@ class ServidorTCP:
         host: str = SERVER_HOST,
         port: int = SERVER_PORT,
         on_log: Optional[Callable[[str], None]] = None,
-        on_client_connect: Optional[Callable[[int, str], None]] = None,
-        on_client_disconnect: Optional[Callable[[int], None]] = None,
-        on_error: Optional[Callable[[str], None]] = None,
     ):
         """
         Args:
@@ -78,17 +74,11 @@ class ServidorTCP:
             host: IP donde escuchar
             port: Puerto TCP
             on_log: Callback para logs (ej. para GUI)
-            on_client_connect: Callback(cliente_id, addr) al conectar cliente
-            on_client_disconnect: Callback(cliente_id) al desconectar cliente
-            on_error: Callback(error_msg) al ocurrir error
         """
         self.grafo = grafo
         self.host = host
         self.port = port
         self.on_log = on_log or (lambda msg: print(f"[SERVER] {msg}"))
-        self.on_client_connect = on_client_connect
-        self.on_client_disconnect = on_client_disconnect
-        self.on_error = on_error
 
         self._socket: Optional[socket.socket] = None
         self._activo = False
@@ -111,12 +101,11 @@ class ServidorTCP:
         Crea socket, bind, listen y lanza thread aceptador.
         """
         if self._activo:
-            raise ServidorTCPError("El servidor ya está activo.")
+            raise ServidorTCPError("El servidor ya esta activo.")
 
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self._socket.settimeout(SOCKET_TIMEOUT)  # Timeout para accept()
             self._socket.bind((self.host, self.port))
             self._socket.listen(SOCKET_BACKLOG)
             self._activo = True
@@ -136,7 +125,6 @@ class ServidorTCP:
     def detener(self) -> None:
         """
         Detiene el servidor y cierra todas las conexiones.
-        Intenta graceful shutdown esperando a los threads.
         """
         if not self._activo:
             return
@@ -148,120 +136,22 @@ class ServidorTCP:
         if self._socket:
             try:
                 self._socket.close()
-            except Exception as e:
-                self._log(f"[WARN] Error cerrando socket principal: {e}")
+            except:
+                pass
 
         # Cerrar conexiones de clientes
         with self._lock:
             for cliente_id, info in list(self._clientes.items()):
                 try:
-                    # Intentar shutdown gracioso (FIN)
-                    info.conn.shutdown(socket.SHUT_RDWR)
+                    info.conn.close()
                 except:
                     pass
-                try:
-                    info.conn.close()
-                except Exception as e:
-                    self._log(f"[WARN] Error cerrando cliente #{cliente_id}: {e}")
             self._clientes.clear()
-
-        # Esperar a threads de clientes (graceful shutdown)
-        if self._thread_aceptar:
-            try:
-                self._thread_aceptar.join(timeout=GRACEFUL_SHUTDOWN_TIMEOUT)
-            except Exception as e:
-                self._log(f"[WARN] Error esperando threads: {e}")
 
         self._log("[OK] Servidor detenido")
 
     def esta_activo(self) -> bool:
         return self._activo
-
-    def _cliente_desconectado_por_timeout(self, cliente_id: int) -> bool:
-        """
-        Detecta si un cliente se desconectó por timeout de inactividad.
-        
-        Args:
-            cliente_id: ID del cliente a verificar
-        
-        Returns:
-            True si pasó más de SOCKET_TIMEOUT segundos sin mensaje
-        """
-        with self._lock:
-            if cliente_id not in self._clientes:
-                return False
-            
-            info = self._clientes[cliente_id]
-            tiempo_inactivo = (datetime.now() - info.ultimo_mensaje).total_seconds()
-            
-            # Si supera timeout, cliente está inactivo
-            return tiempo_inactivo > SOCKET_TIMEOUT
-
-    def _actualizar_timestamp_cliente(self, cliente_id: int) -> None:
-        """
-        Actualiza el timestamp del último mensaje de un cliente.
-        
-        Args:
-            cliente_id: ID del cliente
-        """
-        with self._lock:
-            if cliente_id in self._clientes:
-                self._clientes[cliente_id].ultimo_mensaje = datetime.now()
-
-    # =========================
-    # Acceso thread-safe al grafo
-    # =========================
-
-    def _acceso_grafo_seguro(self, operacion: Callable[[], Any]) -> Any:
-        """
-        Wrapper thread-safe para operaciones sobre el grafo compartido.
-        Uso: resultado = self._acceso_grafo_seguro(lambda: self.grafo.buscar_usuario("X"))
-        
-        Args:
-            operacion: Función sin argumentos que accede al grafo
-        
-        Returns:
-            Resultado de la operación
-        """
-        with self._lock:
-            return operacion()
-
-    def _grafo_buscar_usuario(self, username: str) -> Optional[Dict]:
-        """Thread-safe: buscar usuario en el grafo."""
-        with self._lock:
-            return self.grafo.buscar_usuario(username)
-
-    def _grafo_agregar_amistad(self, user1: str, user2: str) -> bool:
-        """Thread-safe: agregar amistad en el grafo."""
-        with self._lock:
-            return self.grafo.agregar_amistad(user1, user2)
-
-    def _grafo_eliminar_amistad(self, user1: str, user2: str) -> bool:
-        """Thread-safe: eliminar amistad en el grafo."""
-        with self._lock:
-            return self.grafo.eliminar_amistad(user1, user2)
-
-    def _grafo_obtener_estadisticas(self, username: str) -> Optional[Dict]:
-        """Thread-safe: obtener estadisticas de un usuario."""
-        with self._lock:
-            # Asume que tenemos una funcion en grafo o algoritmos
-            usuario = self.grafo.buscar_usuario(username)
-            if not usuario:
-                return None
-            # Calcular estadisticas basicas
-            amigos = self.grafo.obtener_amigos(username)
-            return {
-                "username": username,
-                "num_amigos": len(amigos),
-                "amigos": amigos,
-            }
-
-    def _grafo_encontrar_camino(self, origen: str, destino: str) -> Optional[List[str]]:
-        """Thread-safe: encontrar camino entre dos usuarios."""
-        with self._lock:
-            # Importar algoritmo si es necesario
-            from grafo.algoritmos import encontrar_camino_bfs
-            return encontrar_camino_bfs(self.grafo, origen, destino)
 
     # =========================
     # Loop principal: aceptar conexiones
@@ -282,10 +172,6 @@ class ServidorTCP:
                     cliente_id = self._contador_clientes
 
                 self._log(f"[CONNECT] Cliente #{cliente_id} conectado desde {addr}")
-                
-                # Callback: cliente conectado
-                if self.on_client_connect:
-                    self.on_client_connect(cliente_id, addr[0])
 
                 # Crear thread para manejar este cliente
                 thread_cliente = threading.Thread(
@@ -305,225 +191,7 @@ class ServidorTCP:
                 break
             except Exception as e:
                 if self._activo:
-                    msg_error = f"Error aceptando conexion: {e}"
-                    self._log(f"[ERROR] {msg_error}")
-                    if self.on_error:
-                        self.on_error(msg_error)
-
-    # =========================
-    # DESPACHO DE MENSAJES
-    # =========================
-    def _despachar_mensaje(self, msg: Message, cliente_id: int) -> Response:
-        """
-        Despacha el mensaje recibido al handler correspondiente.
-        
-        Args:
-            msg: Mensaje recibido del cliente
-            cliente_id: ID del cliente que envió el mensaje
-        
-        Returns:
-            Response a enviar al cliente
-        """
-        try:
-            # PING - health check
-            if msg.type == "PING":
-                return self._handle_ping(msg)
-            
-            # Operaciones de grafo
-            elif msg.type == "SEARCH_USER":
-                return self._handle_search_user(msg)
-            elif msg.type == "ADD_FRIEND":
-                return self._handle_add_friend(msg)
-            elif msg.type == "REMOVE_FRIEND":
-                return self._handle_remove_friend(msg)
-            elif msg.type == "GET_STATS":
-                return self._handle_get_stats(msg)
-            elif msg.type == "GET_PATH":
-                return self._handle_get_path(msg)
-            
-            # Autenticacion (rama 9 - stubs por ahora)
-            elif msg.type == "LOGIN":
-                return Response(
-                    ok=False,
-                    message="LOGIN no implementado aun (rama 9 en progreso)",
-                    request_id=msg.request_id,
-                )
-            elif msg.type == "REGISTER":
-                return Response(
-                    ok=False,
-                    message="REGISTER no implementado aun (rama 9 en progreso)",
-                    request_id=msg.request_id,
-                )
-            
-            # Tipo desconocido
-            else:
-                return Response(
-                    ok=False,
-                    message=f"Tipo de mensaje desconocido: {msg.type}",
-                    request_id=msg.request_id,
-                )
-        
-        except Exception as e:
-            self._log(f"[ERROR] Error despachando {msg.type}: {e}")
-            if self.on_error:
-                self.on_error(f"Error despachando {msg.type}: {e}")
-            return Response(
-                ok=False,
-                message=f"Error procesando {msg.type}: {str(e)}",
-                request_id=msg.request_id,
-            )
-
-    def _handle_ping(self, msg: Message) -> Response:
-        """Handler para PING - health check."""
-        return Response(
-            ok=True,
-            message="PONG",
-            request_id=msg.request_id,
-        )
-
-    def _handle_search_user(self, msg: Message) -> Response:
-        """
-        Handler para SEARCH_USER.
-        Payload esperado: {"username": str}
-        """
-        username = msg.payload.get("username")
-        if not username:
-            return Response(
-                ok=False,
-                message="Falta parametro 'username'",
-                request_id=msg.request_id,
-            )
-        
-        usuario = self._grafo_buscar_usuario(username)
-        if usuario:
-            return Response(
-                ok=True,
-                message="Usuario encontrado",
-                data=usuario,
-                request_id=msg.request_id,
-            )
-        else:
-            return Response(
-                ok=False,
-                message=f"Usuario '{username}' no encontrado",
-                request_id=msg.request_id,
-            )
-
-    def _handle_add_friend(self, msg: Message) -> Response:
-        """
-        Handler para ADD_FRIEND.
-        Payload esperado: {"user1": str, "user2": str}
-        """
-        user1 = msg.payload.get("user1")
-        user2 = msg.payload.get("user2")
-        
-        if not user1 or not user2:
-            return Response(
-                ok=False,
-                message="Faltan parametros 'user1' o 'user2'",
-                request_id=msg.request_id,
-            )
-        
-        exito = self._grafo_agregar_amistad(user1, user2)
-        if exito:
-            return Response(
-                ok=True,
-                message=f"Amistad agregada: {user1} <-> {user2}",
-                request_id=msg.request_id,
-            )
-        else:
-            return Response(
-                ok=False,
-                message=f"No se pudo agregar amistad (usuarios no existen?)",
-                request_id=msg.request_id,
-            )
-
-    def _handle_remove_friend(self, msg: Message) -> Response:
-        """
-        Handler para REMOVE_FRIEND.
-        Payload esperado: {"user1": str, "user2": str}
-        """
-        user1 = msg.payload.get("user1")
-        user2 = msg.payload.get("user2")
-        
-        if not user1 or not user2:
-            return Response(
-                ok=False,
-                message="Faltan parametros 'user1' o 'user2'",
-                request_id=msg.request_id,
-            )
-        
-        exito = self._grafo_eliminar_amistad(user1, user2)
-        if exito:
-            return Response(
-                ok=True,
-                message=f"Amistad eliminada: {user1} <-> {user2}",
-                request_id=msg.request_id,
-            )
-        else:
-            return Response(
-                ok=False,
-                message=f"No se pudo eliminar amistad (no existe?)",
-                request_id=msg.request_id,
-            )
-
-    def _handle_get_stats(self, msg: Message) -> Response:
-        """
-        Handler para GET_STATS.
-        Payload esperado: {"username": str}
-        """
-        username = msg.payload.get("username")
-        if not username:
-            return Response(
-                ok=False,
-                message="Falta parametro 'username'",
-                request_id=msg.request_id,
-            )
-        
-        stats = self._grafo_obtener_estadisticas(username)
-        if stats:
-            return Response(
-                ok=True,
-                message="Estadisticas obtenidas",
-                data=stats,
-                request_id=msg.request_id,
-            )
-        else:
-            return Response(
-                ok=False,
-                message=f"Usuario '{username}' no encontrado",
-                request_id=msg.request_id,
-            )
-
-    def _handle_get_path(self, msg: Message) -> Response:
-        """
-        Handler para GET_PATH.
-        Payload esperado: {"origen": str, "destino": str}
-        """
-        origen = msg.payload.get("origen")
-        destino = msg.payload.get("destino")
-        
-        if not origen or not destino:
-            return Response(
-                ok=False,
-                message="Faltan parametros 'origen' o 'destino'",
-                request_id=msg.request_id,
-            )
-        
-        camino = self._grafo_encontrar_camino(origen, destino)
-        if camino:
-            return Response(
-                ok=True,
-                message=f"Camino encontrado ({len(camino)} nodos)",
-                data={"camino": camino},
-                request_id=msg.request_id,
-            )
-        else:
-            return Response(
-                ok=False,
-                message=f"No existe camino entre '{origen}' y '{destino}'",
-                request_id=msg.request_id,
-            )
+                    self._log(f"[ERROR] Error aceptando conexion: {e}")
 
     # =========================
     # Handler de cliente individual
@@ -532,80 +200,254 @@ class ServidorTCP:
         self, cliente_id: int, conn: socket.socket, addr: tuple[str, int]
     ) -> None:
         """
-        Atiende las peticiones de un cliente en un loop hasta que se desconecta.
-        Cada cliente corre en su propio thread independientemente.
-        Maneja timeouts, desconexiones inesperadas y errores de socket.
+        Atiende las peticiones de un cliente hasta que se desconecta.
         """
         try:
-            # Configurar timeout en socket del cliente
-            conn.settimeout(SOCKET_TIMEOUT)
-            
             while self._activo:
                 try:
-                    # Recibir mensaje del cliente (bloqueante con timeout)
+                    # Recibir mensaje
                     msg = recv_message(conn)
-                    
-                    # Actualizar timestamp de actividad
-                    self._actualizar_timestamp_cliente(cliente_id)
-                    
                     self._log(
                         f"[RECV] Cliente #{cliente_id}: {msg.type} | payload={msg.payload}"
                     )
 
-                    # Despachar mensaje según tipo
-                    respuesta = self._despachar_mensaje(msg, cliente_id)
+                    # Despachar segun tipo
+                    respuesta = self._despachar_mensaje(cliente_id, msg)
 
                     # Enviar respuesta
                     send_response(conn, respuesta)
-                    self._log(f"[SEND] Cliente #{cliente_id}: respuesta enviada")
 
-                except socket.timeout:
-                    # Timeout esperado, cliente inactivo
-                    self._log(f"[TIMEOUT] Cliente #{cliente_id} inactivo (>180s)")
-                    break
-                    
-                except ConnectionResetError:
-                    # Cliente desconectó abruptamente
-                    self._log(f"[DISCONNECT] Cliente #{cliente_id} reset por peer")
-                    break
-                    
-                except BrokenPipeError:
-                    # No se puede escribir al socket (cliente desconectó)
-                    self._log(f"[DISCONNECT] Cliente #{cliente_id} pipe roto")
-                    break
-                    
                 except ConnectionError:
-                    # Error generico de conexión
+                    # Cliente desconectado
                     break
-                    
                 except Exception as e:
-                    # Error generico al procesar
-                    self._log(f"[WARN] Error procesando cliente #{cliente_id}: {e}")
+                    self._log(f"[WARN] Error procesando mensaje de #{cliente_id}: {e}")
+                    resp = Response(ok=False, message=f"Error interno: {e}")
                     try:
-                        resp = Response(ok=False, message=f"Error interno: {e}")
                         send_response(conn, resp)
                     except:
-                        pass
-                    break
+                        break
 
-        except Exception as e:
-            # Error al configurar socket o en el loop principal
-            self._log(f"[ERROR] Error grave en cliente #{cliente_id}: {e}")
-            if self.on_error:
-                self.on_error(f"Error en cliente #{cliente_id}: {e}")
-                
         finally:
-            # Cleanup garantizado
+            # Cleanup
             with self._lock:
                 self._clientes.pop(cliente_id, None)
-            
             try:
                 conn.close()
             except:
                 pass
-                
             self._log(f"[DISCONNECT] Cliente #{cliente_id} desconectado")
+
+    # =========================
+    # Despachador de mensajes
+    # =========================
+    def _despachar_mensaje(self, cliente_id: int, msg: Message) -> Response:
+        """
+        Procesa un mensaje y retorna la respuesta correspondiente.
+        """
+        tipo = msg.type
+        payload = msg.payload
+
+        # PING (health check)
+        if tipo == MsgType.PING:
+            return Response(ok=True, message="PONG", request_id=msg.request_id)
+
+        # SEARCH_USER
+        elif tipo == MsgType.SEARCH_USER:
+            return self._handle_search_user(payload, msg.request_id)
+
+        # GET_PROFILE
+        elif tipo == MsgType.GET_PROFILE:
+            return self._handle_get_profile(payload, msg.request_id)
+
+        # ADD_FRIEND
+        elif tipo == MsgType.ADD_FRIEND:
+            return self._handle_add_friend(payload, msg.request_id)
+
+        # REMOVE_FRIEND
+        elif tipo == MsgType.REMOVE_FRIEND:
+            return self._handle_remove_friend(payload, msg.request_id)
+
+        # GET_STATS
+        elif tipo == MsgType.GET_STATS:
+            return self._handle_get_stats(payload, msg.request_id)
+
+        # GET_PATH
+        elif tipo == MsgType.GET_PATH:
+            return self._handle_get_path(payload, msg.request_id)
+
+        # LOGIN / REGISTER (delegado a autenticacion.py en rama 9)
+        elif tipo == MsgType.LOGIN:
+            return Response(
+                ok=False,
+                message="LOGIN no implementado aun (rama 9)",
+                request_id=msg.request_id,
+            )
+
+        elif tipo == MsgType.REGISTER:
+            return Response(
+                ok=False,
+                message="REGISTER no implementado aun (rama 9)",
+                request_id=msg.request_id,
+            )
+
+        else:
+            return Response(
+                ok=False,
+                message=f"Tipo de mensaje desconocido: {tipo}",
+                request_id=msg.request_id,
+            )
+
+    # =========================
+    # Handlers especificos
+    # =========================
+    def _handle_search_user(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Busca un usuario por username.
+        Payload: {"username": "..."}
+        """
+        username = payload.get("username", "").strip()
+        if not username:
+            return Response(ok=False, message="Username vacio", request_id=request_id)
+
+        with self._lock:
+            usuario = self.grafo.buscar_usuario(username)
+            if not usuario:
+                return Response(
+                    ok=False, message="Usuario no encontrado", request_id=request_id
+                )
             
-            # Callback: cliente desconectado
-            if self.on_client_disconnect:
-                self.on_client_disconnect(cliente_id)
+            amigos = self.grafo.obtener_amigos(username)
+            data = {
+                "username": username,
+                "amigos": amigos,
+            }
+
+        return Response(
+            ok=True, message="Usuario encontrado", data=data, request_id=request_id
+        )
+
+    def _handle_get_profile(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Obtiene perfil completo de un usuario.
+        Payload: {"username": "..."}
+        """
+        # Mismo que search_user por ahora
+        return self._handle_search_user(payload, request_id)
+
+    def _handle_add_friend(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Agrega una amistad entre dos usuarios.
+        Payload: {"user1": "...", "user2": "..."}
+        """
+        user1 = payload.get("user1", "").strip()
+        user2 = payload.get("user2", "").strip()
+
+        if not user1 or not user2:
+            return Response(
+                ok=False, message="Faltan usernames", request_id=request_id
+            )
+
+        with self._lock:
+            # Verificar que ambos usuarios existan
+            if not self.grafo.buscar_usuario(user1):
+                return Response(
+                    ok=False, message=f"Usuario {user1} no existe", request_id=request_id
+                )
+            if not self.grafo.buscar_usuario(user2):
+                return Response(
+                    ok=False, message=f"Usuario {user2} no existe", request_id=request_id
+                )
+
+            # Agregar amistad
+            exito = self.grafo.agregar_amistad(user1, user2)
+            if not exito:
+                return Response(
+                    ok=False, message="No se pudo agregar amistad", request_id=request_id
+                )
+
+        self._log(f"[FRIEND] Amistad agregada: {user1} <-> {user2}")
+        return Response(ok=True, message="Amistad agregada", request_id=request_id)
+
+    def _handle_remove_friend(
+        self, payload: dict, request_id: Optional[str]
+    ) -> Response:
+        """
+        Elimina una amistad.
+        Payload: {"user1": "...", "user2": "..."}
+        """
+        user1 = payload.get("user1", "").strip()
+        user2 = payload.get("user2", "").strip()
+
+        if not user1 or not user2:
+            return Response(
+                ok=False, message="Faltan usernames", request_id=request_id
+            )
+
+        with self._lock:
+            exito = self.grafo.eliminar_amistad(user1, user2)
+            if not exito:
+                return Response(ok=False, message="No son amigos", request_id=request_id)
+
+        self._log(f"[FRIEND] Amistad eliminada: {user1} <-> {user2}")
+        return Response(ok=True, message="Amistad eliminada", request_id=request_id)
+
+    def _handle_get_stats(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Calcula estadisticas del grafo.
+        Payload: {} (vacio)
+        """
+        with self._lock:
+            stats = calcular_estadisticas(self.grafo)
+            data = estadisticas_como_dict(stats)
+
+        return Response(
+            ok=True, message="Estadisticas calculadas", data=data, request_id=request_id
+        )
+
+    def _handle_get_path(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Encuentra camino entre dos usuarios (BFS).
+        Payload: {"inicio": "...", "fin": "..."}
+        """
+        inicio = payload.get("inicio", "").strip()
+        fin = payload.get("fin", "").strip()
+
+        if not inicio or not fin:
+            return Response(
+                ok=False, message="Faltan inicio/fin", request_id=request_id
+            )
+
+        with self._lock:
+            camino = encontrar_camino_bfs(self.grafo, inicio, fin)
+
+        if camino is None:
+            return Response(
+                ok=False,
+                message=f"No existe camino entre {inicio} y {fin}",
+                request_id=request_id,
+            )
+
+        return Response(
+            ok=True,
+            message=f"Camino encontrado ({len(camino)} saltos)",
+            data={"camino": camino},
+            request_id=request_id,
+        )
+
+    # =========================
+    # Utilidades
+    # =========================
+    def obtener_info_clientes(self) -> list[dict]:
+        """
+        Devuelve lista de clientes conectados (para GUI).
+        """
+        with self._lock:
+            return [
+                {
+                    "id": cid,
+                    "addr": f"{info.addr[0]}:{info.addr[1]}",
+                    "usuario": info.usuario_logueado or "No logueado",
+                }
+                for cid, info in self._clientes.items()
+            ]
