@@ -37,6 +37,13 @@ from utils.protocolo import (
     send_response,
     MsgType,
 )
+from servidor.autenticacion import (
+    hash_password,
+    verify_password,
+    registrar_usuario_seguro,
+    validar_login,
+)
+from cliente.datos_local import cargar_usuarios, guardar_usuarios
 
 
 class ServidorTCPError(Exception):
@@ -278,18 +285,10 @@ class ServidorTCP:
 
         # LOGIN / REGISTER (delegado a autenticacion.py en rama 9)
         elif tipo == MsgType.LOGIN:
-            return Response(
-                ok=False,
-                message="LOGIN no implementado aun (rama 9)",
-                request_id=msg.request_id,
-            )
+            return self._handle_login(payload, msg.request_id)
 
         elif tipo == MsgType.REGISTER:
-            return Response(
-                ok=False,
-                message="REGISTER no implementado aun (rama 9)",
-                request_id=msg.request_id,
-            )
+            return self._handle_register(payload, msg.request_id)
 
         else:
             return Response(
@@ -433,6 +432,67 @@ class ServidorTCP:
             message=f"Camino encontrado ({len(camino)} saltos)",
             data={"camino": camino},
             request_id=request_id,
+        )
+
+    def _handle_login(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Autentica un usuario.
+        Payload: {"usuario": "...", "password": "..."}
+        """
+        usuario = payload.get("usuario", "").strip()
+        password = payload.get("password", "").strip()
+
+        if not usuario or not password:
+            return Response(
+                ok=False, message="Usuario y password requeridos", request_id=request_id
+            )
+
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+            exito, mensaje = validar_login(usuario, password, usuarios_db)
+
+        if not exito:
+            return Response(ok=False, message=mensaje, request_id=request_id)
+
+        return Response(
+            ok=True, message="Login exitoso", data={"usuario": usuario}, request_id=request_id
+        )
+
+    def _handle_register(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Registra un nuevo usuario.
+        Payload: {"usuario": "...", "password": "...", "nombre": "...", "apellido": "..."}
+        """
+        usuario = payload.get("usuario", "").strip()
+        password = payload.get("password", "").strip()
+        nombre = payload.get("nombre", "").strip()
+        apellido = payload.get("apellido", "").strip()
+
+        if not usuario or not password:
+            return Response(
+                ok=False, message="Usuario y password requeridos", request_id=request_id
+            )
+
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+
+            if usuario in usuarios_db:
+                return Response(
+                    ok=False, message="Usuario ya existe", request_id=request_id
+                )
+
+            nuevo_usuario = registrar_usuario_seguro(
+                usuario=usuario,
+                password=password,
+                nombre=nombre,
+                apellido=apellido,
+            )
+            usuarios_db[usuario] = nuevo_usuario
+            guardar_usuarios(usuarios_db)
+
+        self._log(f"[REGISTER] Nuevo usuario registrado: {usuario}")
+        return Response(
+            ok=True, message="Usuario registrado", data={"usuario": usuario}, request_id=request_id
         )
 
     # =========================
