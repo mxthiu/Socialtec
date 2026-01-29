@@ -253,7 +253,7 @@ class ContenidoAmigos(QWidget):
         """Elimina un amigo"""
         try:
             from cliente.dialogos import confirmar_eliminar_amigo
-            from cliente.datos_local import eliminar_amigo as eliminar_amigo_db, cargar_usuarios, obtener_amigos_completos
+            from cliente.auth_client import eliminar_amistad as eliminar_amigo_db, cargar_usuarios, obtener_amigos_completos
             
             nombre_amigo = usuario
             for amigo in self.usuario_data.get('amigos', []):
@@ -285,7 +285,7 @@ class ContenidoAmigos(QWidget):
     def ver_perfil(self, usuario_data):
         """Ver perfil de un amigo en modo lectura"""
         try:
-            from cliente.datos_local import cargar_usuarios, obtener_amigos_completos
+            from cliente.auth_client import cargar_usuarios, obtener_amigos_completos
             from cliente.gui_perfil_publico import ContenidoPerfilPublico
             usuarios = cargar_usuarios()
             username = usuario_data["usuario"]
@@ -308,7 +308,7 @@ class ContenidoAmigos(QWidget):
     def actualizar_datos(self):
         """Recarga los datos"""
         try:
-            from cliente.datos_local import cargar_usuarios, obtener_amigos_completos
+            from cliente.auth_client import cargar_usuarios, obtener_amigos_completos
 
             username = self.usuario_data.get("usuario")
             usuarios = cargar_usuarios()
@@ -319,4 +319,5 @@ class ContenidoAmigos(QWidget):
             pass
 
         self.actualizar_lista_amigos()
+
 

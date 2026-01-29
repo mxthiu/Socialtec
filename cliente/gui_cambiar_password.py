@@ -102,7 +102,7 @@ class ContenidoCambiarPassword(QWidget):
         label_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # Email (mostrar, no editable)
-        from cliente.datos_local import obtener_email_usuario
+        from cliente.auth_client import obtener_email_usuario
         email = obtener_email_usuario(self.usuario_data["usuario"])
         
         frame = QFrame()
@@ -276,7 +276,7 @@ class ContenidoCambiarPassword(QWidget):
     def enviar_codigo(self):
         """Envía el código por email"""
         from cliente.dialogos import confirmar_cambio_password
-        from cliente.datos_local import obtener_email_usuario
+        from cliente.auth_client import obtener_email_usuario
         from cliente.email_service import enviar_codigo_recuperacion
         
         if not confirmar_cambio_password(self):
@@ -325,7 +325,7 @@ class ContenidoCambiarPassword(QWidget):
             return
         
         # Verificar código
-        from cliente.datos_local import obtener_email_usuario, cambiar_password
+        from cliente.auth_client import obtener_email_usuario, cambiar_password_usuario as cambiar_password
         from cliente.email_service import verificar_codigo
         
         email = obtener_email_usuario(self.usuario_data["usuario"])
@@ -366,3 +366,4 @@ class ContenidoCambiarPassword(QWidget):
         """Vuelve a la pantalla anterior"""
         if self.parent_window:
             self.parent_window.volver_atras()
+

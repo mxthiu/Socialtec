@@ -106,46 +106,64 @@ class ContenidoEstadisticas(QWidget):
     
     def cargar_estadisticas(self, layout):
         """Carga y muestra las estadísticas"""
-        from cliente.datos_local import obtener_estadisticas_globales
+        from cliente.auth_client import obtener_estadisticas_globales
         
         stats = obtener_estadisticas_globales()
         
+        # Validar que stats no sea None
+        if stats is None:
+            print("⚠️ ERROR: stats es None")
+            return
         
+        # Debug: mostrar estructura
+        print(f"DEBUG: stats = {stats}")
+        
+        # Validar keys requeridas
+        if "total_usuarios" not in stats:
+            print(f"⚠️ ERROR: Falta 'total_usuarios' en stats. Keys disponibles: {list(stats.keys())}")
+            return
+        
+        # Mostrar estadísticas principales
         self.crear_card_principal(
             layout,
             "Total de Usuarios",
-            str(stats["total_usuarios"]),
+            str(stats.get("total_usuarios", 0)),
             "usuarios registrados"
         )
         
         self.crear_card_principal(
             layout,
+            "Total de Amistades",
+            str(stats.get("total_amistades", 0)),
+            "conexiones en la red"
+        )
+        
+        self.crear_card_principal(
+            layout,
             "Promedio de Amigos",
-            str(stats["promedio_amigos"]),
+            f"{stats.get('promedio_amigos', 0):.2f}",
             "amigos por usuario"
         )
         
-        
-        if stats["usuario_mas_amigos"]:
+        # Mostrar usuario con más amigos
+        if stats.get("usuario_mas_amigos"):
+            usuario_mas = stats["usuario_mas_amigos"]
             self.crear_card_usuario(
                 layout,
                 "Usuario con Más Amigos",
-                stats["usuario_mas_amigos"],
+                usuario_mas,
                 COLORES['exito']
             )
         
-        
-        if stats["usuario_menos_amigos"]:
+        # Mostrar usuario con menos amigos
+        if stats.get("usuario_menos_amigos"):
+            usuario_menos = stats["usuario_menos_amigos"]
             self.crear_card_usuario(
                 layout,
                 "Usuario con Menos Amigos",
-                stats["usuario_menos_amigos"],
-                COLORES['texto_secundario']
+                usuario_menos,
+                COLORES['error']
             )
-        
-        
-        if stats["todos_usuarios"]:
-            self.crear_top_usuarios(layout, stats["todos_usuarios"][:5])
     
     def crear_card_principal(self, layout, titulo, valor, descripcion):
         """Card con estadística principal"""
@@ -226,7 +244,7 @@ class ContenidoEstadisticas(QWidget):
             }}
         """)
         
-        label_nombre = QLabel(usuario_data["nombre"])
+        label_nombre = QLabel(usuario_data.get("nombre", "Desconocido"))
         label_nombre.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto']};
@@ -236,7 +254,7 @@ class ContenidoEstadisticas(QWidget):
             }}
         """)
         
-        label_usuario = QLabel(f"@{usuario_data['usuario']}")
+        label_usuario = QLabel(f"@{usuario_data.get('usuario', 'N/A')}")
         label_usuario.setStyleSheet(f"""
             QLabel {{
                 color: {COLORES['texto_secundario']};
@@ -245,7 +263,14 @@ class ContenidoEstadisticas(QWidget):
             }}
         """)
         
-        label_amigos = QLabel(f"{usuario_data['cantidad_amigos']} amigos")
+        # Calcular cantidad de amigos (puede ser lista o número)
+        amigos_data = usuario_data.get("amigos", [])
+        if isinstance(amigos_data, list):
+            cantidad_amigos = len(amigos_data)
+        else:
+            cantidad_amigos = amigos_data if isinstance(amigos_data, int) else 0
+        
+        label_amigos = QLabel(f"{cantidad_amigos} amigos")
         label_amigos.setStyleSheet(f"""
             QLabel {{
                 color: {color};
@@ -380,4 +405,5 @@ class ContenidoEstadisticas(QWidget):
         layout.addLayout(layout_amigos)
         
         return widget
+
 

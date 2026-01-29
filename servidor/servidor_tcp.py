@@ -43,7 +43,15 @@ from servidor.autenticacion import (
     registrar_usuario_seguro,
     validar_login,
 )
-from cliente.datos_local import cargar_usuarios, guardar_usuarios
+from servidor.persistencia import (
+    cargar_usuarios,
+    guardar_usuarios,
+    agregar_amistad,
+    eliminar_amistad,
+    obtener_usuario,
+    usuario_existe,
+    obtener_estadisticas_globales,
+)
 
 
 class ServidorTCPError(Exception):
@@ -290,6 +298,34 @@ class ServidorTCP:
         elif tipo == MsgType.REGISTER:
             return self._handle_register(payload, msg.request_id)
 
+        # CHANGE_PASSWORD
+        elif tipo == "CHANGE_PASSWORD":
+            return self._handle_change_password(payload, msg.request_id)
+
+        # CHANGE_PASSWORD_NO_VALIDATION (para recuperación por email)
+        elif tipo == "CHANGE_PASSWORD_NO_VALIDATION":
+            return self._handle_change_password_no_validation(payload, msg.request_id)
+
+        # CHECK_USER (verificar disponibilidad de usuario)
+        elif tipo == "CHECK_USER":
+            return self._handle_check_user(payload, msg.request_id)
+
+        # UPDATE_PROFILE
+        elif tipo == "UPDATE_PROFILE":
+            return self._handle_update_profile(payload, msg.request_id)
+
+        # GET_EMAIL
+        elif tipo == "GET_EMAIL":
+            return self._handle_get_email(payload, msg.request_id)
+
+        # GET_FRIENDS_COMPLETE
+        elif tipo == "GET_FRIENDS_COMPLETE":
+            return self._handle_get_friends_complete(payload, msg.request_id)
+
+        # GET_ALL_USERS
+        elif tipo == "GET_ALL_USERS":
+            return self._handle_get_all_users(payload, msg.request_id)
+
         else:
             return Response(
                 ok=False,
@@ -302,28 +338,38 @@ class ServidorTCP:
     # =========================
     def _handle_search_user(self, payload: dict, request_id: Optional[str]) -> Response:
         """
-        Busca un usuario por username.
-        Payload: {"username": "..."}
+        Busca usuarios por nombre, apellido o usuario (query).
+        Payload: {"query": "..."}
         """
-        username = payload.get("username", "").strip()
-        if not username:
-            return Response(ok=False, message="Username vacio", request_id=request_id)
+        query = payload.get("query", "").strip().lower()
+        if not query:
+            return Response(ok=False, message="Query vacía", request_id=request_id)
 
-        with self._lock:
-            usuario = self.grafo.buscar_usuario(username)
-            if not usuario:
-                return Response(
-                    ok=False, message="Usuario no encontrado", request_id=request_id
-                )
+        usuarios = cargar_usuarios()
+        resultados = []
+        
+        # Buscar en nombre, apellido y usuario
+        for username, datos in usuarios.items():
+            nombre = datos.get("nombre", "").lower()
+            apellido = datos.get("apellido", "").lower()
+            usuario = username.lower()
             
-            amigos = self.grafo.obtener_amigos(username)
-            data = {
-                "username": username,
-                "amigos": amigos,
-            }
+            if query in nombre or query in apellido or query in usuario:
+                resultados.append({
+                    "usuario": username,
+                    "nombre": datos.get("nombre", ""),
+                    "apellido": datos.get("apellido", ""),
+                    "email": datos.get("email", ""),
+                    "foto": datos.get("foto", ""),
+                    "amigos": datos.get("amigos", [])
+                })
+        
+        data = {
+            "usuarios": resultados
+        }
 
         return Response(
-            ok=True, message="Usuario encontrado", data=data, request_id=request_id
+            ok=True, message="Búsqueda completada", data=data, request_id=request_id
         )
 
     def _handle_get_profile(self, payload: dict, request_id: Optional[str]) -> Response:
@@ -337,35 +383,34 @@ class ServidorTCP:
     def _handle_add_friend(self, payload: dict, request_id: Optional[str]) -> Response:
         """
         Agrega una amistad entre dos usuarios.
-        Payload: {"user1": "...", "user2": "..."}
+        Payload: {"usuario1": "...", "usuario2": "..."}
         """
-        user1 = payload.get("user1", "").strip()
-        user2 = payload.get("user2", "").strip()
+        usuario1 = payload.get("usuario1", "").strip()
+        usuario2 = payload.get("usuario2", "").strip()
 
-        if not user1 or not user2:
+        if not usuario1 or not usuario2:
             return Response(
                 ok=False, message="Faltan usernames", request_id=request_id
             )
 
-        with self._lock:
-            # Verificar que ambos usuarios existan
-            if not self.grafo.buscar_usuario(user1):
-                return Response(
-                    ok=False, message=f"Usuario {user1} no existe", request_id=request_id
-                )
-            if not self.grafo.buscar_usuario(user2):
-                return Response(
-                    ok=False, message=f"Usuario {user2} no existe", request_id=request_id
-                )
+        # Verificar que ambos usuarios existan
+        if not usuario_existe(usuario1):
+            return Response(
+                ok=False, message=f"Usuario {usuario1} no existe", request_id=request_id
+            )
+        if not usuario_existe(usuario2):
+            return Response(
+                ok=False, message=f"Usuario {usuario2} no existe", request_id=request_id
+            )
 
-            # Agregar amistad
-            exito = self.grafo.agregar_amistad(user1, user2)
-            if not exito:
-                return Response(
-                    ok=False, message="No se pudo agregar amistad", request_id=request_id
-                )
+        # Agregar amistad en persistencia
+        exito = agregar_amistad(usuario1, usuario2)
+        if not exito:
+            return Response(
+                ok=False, message="No se pudo agregar amistad (ya son amigos)", request_id=request_id
+            )
 
-        self._log(f"[FRIEND] Amistad agregada: {user1} <-> {user2}")
+        self._log(f"[FRIEND] Amistad agregada: {usuario1} <-> {usuario2}")
         return Response(ok=True, message="Amistad agregada", request_id=request_id)
 
     def _handle_remove_friend(
@@ -373,32 +418,36 @@ class ServidorTCP:
     ) -> Response:
         """
         Elimina una amistad.
-        Payload: {"user1": "...", "user2": "..."}
+        Payload: {"usuario1": "...", "usuario2": "..."}
         """
-        user1 = payload.get("user1", "").strip()
-        user2 = payload.get("user2", "").strip()
+        usuario1 = payload.get("usuario1", "").strip()
+        usuario2 = payload.get("usuario2", "").strip()
 
-        if not user1 or not user2:
+        if not usuario1 or not usuario2:
             return Response(
                 ok=False, message="Faltan usernames", request_id=request_id
             )
 
-        with self._lock:
-            exito = self.grafo.eliminar_amistad(user1, user2)
-            if not exito:
-                return Response(ok=False, message="No son amigos", request_id=request_id)
+        # Eliminar de persistencia
+        exito = eliminar_amistad(usuario1, usuario2)
+        if not exito:
+            return Response(ok=False, message="No son amigos", request_id=request_id)
 
-        self._log(f"[FRIEND] Amistad eliminada: {user1} <-> {user2}")
+        self._log(f"[FRIEND] Amistad eliminada: {usuario1} <-> {usuario2}")
         return Response(ok=True, message="Amistad eliminada", request_id=request_id)
 
     def _handle_get_stats(self, payload: dict, request_id: Optional[str]) -> Response:
         """
-        Calcula estadisticas del grafo.
+        Calcula estadisticas globales desde persistencia.
         Payload: {} (vacio)
         """
-        with self._lock:
-            stats = calcular_estadisticas(self.grafo)
-            data = estadisticas_como_dict(stats)
+        # Obtener estadísticas del almacenamiento persistente (usuarios.json)
+        stats = obtener_estadisticas_globales()
+        
+        # Retornar estructura como espera el cliente
+        data = {
+            "estadisticas": stats
+        }
 
         return Response(
             ok=True, message="Estadisticas calculadas", data=data, request_id=request_id
@@ -454,19 +503,33 @@ class ServidorTCP:
         if not exito:
             return Response(ok=False, message=mensaje, request_id=request_id)
 
+        # Obtener datos completos del usuario
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+            if usuario in usuarios_db:
+                usuario_data = usuarios_db[usuario].copy()
+                usuario_data.pop("password_hash", None)
+            else:
+                usuario_data = {}
+
         return Response(
-            ok=True, message="Login exitoso", data={"usuario": usuario}, request_id=request_id
+            ok=True, 
+            message="Login exitoso", 
+            data={"usuario_data": usuario_data}, 
+            request_id=request_id
         )
 
     def _handle_register(self, payload: dict, request_id: Optional[str]) -> Response:
         """
         Registra un nuevo usuario.
-        Payload: {"usuario": "...", "password": "...", "nombre": "...", "apellido": "..."}
+        Payload: {"usuario": "...", "password": "...", "nombre": "...", "apellido": "...", "email": "...", "foto": "..."}
         """
         usuario = payload.get("usuario", "").strip()
         password = payload.get("password", "").strip()
         nombre = payload.get("nombre", "").strip()
         apellido = payload.get("apellido", "").strip()
+        email = payload.get("email", "").strip()
+        foto = payload.get("foto", "").strip()
 
         if not usuario or not password:
             return Response(
@@ -487,12 +550,218 @@ class ServidorTCP:
                 nombre=nombre,
                 apellido=apellido,
             )
+            
+            # Agregar email y foto
+            nuevo_usuario["email"] = email
+            nuevo_usuario["foto"] = foto
+            
             usuarios_db[usuario] = nuevo_usuario
             guardar_usuarios(usuarios_db)
 
         self._log(f"[REGISTER] Nuevo usuario registrado: {usuario}")
         return Response(
             ok=True, message="Usuario registrado", data={"usuario": usuario}, request_id=request_id
+        )
+
+    def _handle_change_password(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Cambia la contraseña verificando la contraseña actual.
+        Payload: {"usuario": "...", "password_actual": "...", "password_nuevo": "..."}
+        """
+        usuario = payload.get("usuario", "").strip()
+        password_actual = payload.get("password_actual", "").strip()
+        password_nuevo = payload.get("password_nuevo", "").strip()
+
+        if not usuario or not password_actual or not password_nuevo:
+            return Response(
+                ok=False, message="Datos incompletos", request_id=request_id
+            )
+
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+
+            if usuario not in usuarios_db:
+                return Response(
+                    ok=False, message="Usuario no existe", request_id=request_id
+                )
+
+            # Verificar password actual
+            hash_actual = usuarios_db[usuario].get("password_hash", "")
+            if not verify_password(password_actual, hash_actual):
+                return Response(
+                    ok=False, message="Contraseña actual incorrecta", request_id=request_id
+                )
+
+            # Generar nuevo hash y actualizar
+            nuevo_hash = hash_password(password_nuevo)
+            usuarios_db[usuario]["password_hash"] = nuevo_hash
+            guardar_usuarios(usuarios_db)
+
+        self._log(f"[PASSWORD] Contraseña cambiada: {usuario}")
+        return Response(
+            ok=True, message="Contraseña cambiada exitosamente", request_id=request_id
+        )
+
+    def _handle_change_password_no_validation(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Cambia la contraseña sin verificar la actual (para recuperación por email).
+        Payload: {"usuario": "...", "password_nuevo": "..."}
+        """
+        usuario = payload.get("usuario", "").strip()
+        password_nuevo = payload.get("password_nuevo", "").strip()
+
+        if not usuario or not password_nuevo:
+            return Response(
+                ok=False, message="Datos incompletos", request_id=request_id
+            )
+
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+
+            if usuario not in usuarios_db:
+                return Response(
+                    ok=False, message="Usuario no existe", request_id=request_id
+                )
+
+            # Generar nuevo hash y actualizar
+            nuevo_hash = hash_password(password_nuevo)
+            usuarios_db[usuario]["password_hash"] = nuevo_hash
+            guardar_usuarios(usuarios_db)
+
+        self._log(f"[PASSWORD] Contraseña cambiada sin validación: {usuario}")
+        return Response(
+            ok=True, message="Contraseña cambiada exitosamente", request_id=request_id
+        )
+
+    def _handle_check_user(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Verifica si un usuario está disponible (no existe).
+        Payload: {"usuario": "..."}
+        """
+        usuario = payload.get("usuario", "").strip()
+
+        if not usuario:
+            return Response(
+                ok=False, message="Usuario requerido", request_id=request_id
+            )
+
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+            disponible = usuario not in usuarios_db
+
+        if disponible:
+            return Response(
+                ok=True, message="Usuario disponible", request_id=request_id
+            )
+        else:
+            return Response(
+                ok=False, message="Usuario no disponible", request_id=request_id
+            )
+
+    def _handle_update_profile(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Actualiza los datos del perfil de un usuario.
+        Payload: {"usuario": "...", "datos": {...}}
+        """
+        usuario = payload.get("usuario", "").strip()
+        datos = payload.get("datos", {})
+
+        if not usuario:
+            return Response(
+                ok=False, message="Usuario requerido", request_id=request_id
+            )
+
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+
+            if usuario not in usuarios_db:
+                return Response(
+                    ok=False, message="Usuario no existe", request_id=request_id
+                )
+
+            # Actualizar campos permitidos
+            for campo in ["nombre", "apellido", "email", "foto"]:
+                if campo in datos:
+                    usuarios_db[usuario][campo] = datos[campo]
+
+            guardar_usuarios(usuarios_db)
+
+        self._log(f"[PROFILE] Perfil actualizado: {usuario}")
+        return Response(
+            ok=True, message="Perfil actualizado exitosamente", request_id=request_id
+        )
+
+    def _handle_get_email(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Obtiene el email de un usuario.
+        Payload: {"usuario": "..."}
+        """
+        usuario = payload.get("usuario", "").strip()
+
+        if not usuario:
+            return Response(
+                ok=False, message="Usuario requerido", request_id=request_id
+            )
+
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+
+            if usuario not in usuarios_db:
+                return Response(
+                    ok=False, message="Usuario no existe", request_id=request_id
+                )
+
+            email = usuarios_db[usuario].get("email", "")
+
+        return Response(
+            ok=True, data={"email": email}, request_id=request_id
+        )
+
+    def _handle_get_friends_complete(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Obtiene los datos completos de una lista de usuarios.
+        Payload: {"usernames": ["user1", "user2", ...]}
+        """
+        usernames = payload.get("usernames", [])
+
+        if not isinstance(usernames, list):
+            return Response(
+                ok=False, message="Se requiere lista de usernames", request_id=request_id
+            )
+
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+            amigos = []
+
+            for username in usernames:
+                if username in usuarios_db:
+                    usuario_data = usuarios_db[username].copy()
+                    # No enviar password_hash
+                    usuario_data.pop("password_hash", None)
+                    amigos.append(usuario_data)
+
+        return Response(
+            ok=True, data={"amigos": amigos}, request_id=request_id
+        )
+
+    def _handle_get_all_users(self, payload: dict, request_id: Optional[str]) -> Response:
+        """
+        Obtiene todos los usuarios (sin passwords).
+        NOTA: Evitar usar en producción, solo para compatibilidad.
+        Payload: {}
+        """
+        with self._lock:
+            usuarios_db = cargar_usuarios()
+            
+            # Crear copia sin password_hash
+            usuarios_sin_pass = {}
+            for username, data in usuarios_db.items():
+                user_copy = data.copy()
+                user_copy.pop("password_hash", None)
+                usuarios_sin_pass[username] = user_copy
+
+        return Response(
+            ok=True, data={"usuarios": usuarios_sin_pass}, request_id=request_id
         )
 
     # =========================

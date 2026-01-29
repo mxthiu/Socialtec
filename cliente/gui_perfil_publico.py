@@ -203,15 +203,15 @@ class ContenidoPerfilPublico(QWidget):
             self.label_estado.setText("No es tu amigo")
 
     def toggle_amistad(self):
-        from cliente.datos_local import agregar_amigo, eliminar_amigo, cargar_usuarios, obtener_amigos_completos
+        from cliente.auth_client import agregar_amistad, eliminar_amistad, cargar_usuarios, obtener_amigos_completos
 
         usuario_actual = self.usuario_actual.get("usuario")
         objetivo = self.perfil_objetivo.get("usuario")
 
         if self.es_amigo():
-            exito, msg = eliminar_amigo(usuario_actual, objetivo)
+            exito, msg = eliminar_amistad(usuario_actual, objetivo)
         else:
-            exito, msg = agregar_amigo(usuario_actual, objetivo)
+            exito, msg = agregar_amistad(usuario_actual, objetivo)
 
         self.label_estado.setText(msg)
 
@@ -222,7 +222,7 @@ class ContenidoPerfilPublico(QWidget):
                 self.usuario_actual["amigos"] = obtener_amigos_completos(amigos_actualizados)
 
             try:
-                from cliente.datos_local import obtener_usuario_completo
+                from cliente.auth_client import obtener_usuario_completo
 
                 datos_actualizados = obtener_usuario_completo(usuario_actual)
                 if datos_actualizados:
@@ -248,3 +248,4 @@ class ContenidoPerfilPublico(QWidget):
 
     def volver_atras(self):
         self.parent_window.volver_atras()
+

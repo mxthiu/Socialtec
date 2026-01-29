@@ -285,7 +285,7 @@ class VentanaRecuperarPassword(QDialog):
     
     def cargar_usuarios(self):
         """Carga la lista de usuarios disponibles"""
-        from cliente.datos_local import cargar_usuarios
+        from cliente.auth_client import cargar_usuarios
         
         usuarios_dict = cargar_usuarios()
         usuarios_lista = list(usuarios_dict.keys())
@@ -306,7 +306,7 @@ class VentanaRecuperarPassword(QDialog):
             self.mostrar_mensaje(1, "Por favor selecciona un usuario", "error")
             return
         
-        from cliente.datos_local import obtener_email_usuario
+        from cliente.auth_client import obtener_email_usuario
         from cliente.email_service import enviar_codigo_recuperacion
         
         email = obtener_email_usuario(self.usuario_seleccionado)
@@ -358,7 +358,7 @@ class VentanaRecuperarPassword(QDialog):
             return
         
         # Verificar código
-        from cliente.datos_local import obtener_email_usuario, cambiar_password
+        from cliente.auth_client import obtener_email_usuario, cambiar_password_sin_validar as cambiar_password
         from cliente.email_service import verificar_codigo
         
         email = obtener_email_usuario(self.usuario_seleccionado)
@@ -394,4 +394,5 @@ class VentanaRecuperarPassword(QDialog):
             label.setStyleSheet(ESTILO_EXITO)
         
         label.setVisible(True)
+
 

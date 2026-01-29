@@ -370,7 +370,7 @@ class VentanaRegistro(QMainWindow):
             self.label_usuario_error.setVisible(True)
             return
         
-        from cliente.datos_local import cargar_usuarios
+        from cliente.auth_client import cargar_usuarios
         usuarios = cargar_usuarios()
         
         if usuario in usuarios:
@@ -390,4 +390,5 @@ if __name__ == "__main__":
     ventana.show()
     
     sys.exit(app.exec())
+
 

@@ -168,7 +168,7 @@ class VentanaMainMenu(QMainWindow):
     def actualizar_datos_usuario(self):
         """Actualiza los datos en todas las pantallas cuando cambian"""
         try:
-            from cliente.datos_local import obtener_usuario_completo
+            from cliente.auth_client import obtener_usuario_completo
 
             datos_actualizados = obtener_usuario_completo(self.usuario_data.get("usuario"))
             if datos_actualizados:
@@ -178,7 +178,6 @@ class VentanaMainMenu(QMainWindow):
 
         self.pantalla_perfil.actualizar_datos()
         self.pantalla_amigos.actualizar_datos()
-        self.pantalla_grafo.actualizar_datos()
     
     def cerrar_sesion(self):
         """Cierra sesión y vuelve al login"""
@@ -226,4 +225,5 @@ if __name__ == "__main__":
     ventana.show()
     
     sys.exit(app.exec())
+
 

@@ -345,24 +345,32 @@ class ContenidoEditarPerfil(QWidget):
             self.mostrar_mensaje("Por favor ingresa un email válido", "error")
             return
         
-        # Actualizar en datos locales
-        from cliente.datos_local import actualizar_perfil
+        # Actualizar en servidor
+        from cliente.auth_client import actualizar_perfil
         
         self.btn_guardar.setEnabled(False)
         self.mostrar_mensaje("Guardando cambios...", "exito")
         
         foto = self.foto_nueva if self.foto_nueva else self.usuario_data.get("foto")
-        exito, mensaje, datos_nuevos = actualizar_perfil(
+        
+        # Llamar con la estructura correcta: (usuario, dict_datos)
+        exito, mensaje = actualizar_perfil(
             self.usuario_data["usuario"],
-            nombre,
-            apellido,
-            email,
-            foto
+            {
+                "nombre": nombre,
+                "apellido": apellido,
+                "email": email,
+                "foto": foto
+            }
         )
         
         if exito:
-            # Emitir señal con datos actualizados
-            self.perfil_actualizado.emit(datos_nuevos)
+            # Actualizar datos locales y emitir señal
+            self.usuario_data["nombre"] = nombre
+            self.usuario_data["apellido"] = apellido
+            self.usuario_data["email"] = email
+            self.usuario_data["foto"] = foto
+            self.perfil_actualizado.emit(self.usuario_data)
             QTimer.singleShot(1000, self.volver_atras)
         else:
             self.btn_guardar.setEnabled(True)
@@ -404,4 +412,5 @@ class ContenidoEditarPerfil(QWidget):
             self.label_mensaje.setStyleSheet(ESTILO_EXITO)
         
         self.label_mensaje.setVisible(True)
+
 

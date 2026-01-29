@@ -1,5 +1,50 @@
 {
-  "usuarios": [],
-  "amistades": [],
-  "mensajes": []
+  "est_user_1": {
+    "usuario": "est_user_1",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$DwEAAKAUQqj13jsHAKDUOg$Cj0URrEZgL2fsMDIb81iGRo2ouxSTwvADZBFgG3+Ok0",
+    "nombre": "Est",
+    "apellido": "User1",
+    "email": "est1@test.com",
+    "foto": "",
+    "amigos": [
+      "est_user_2",
+      "sara"
+    ]
+  },
+  "est_user_2": {
+    "usuario": "est_user_2",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$svb+fw/BWKv1XgtByFmrdQ$ZqFVTr4VCBHFSYNa17zBtP78AtbkK56/MHvUb7eAOyg",
+    "nombre": "Est",
+    "apellido": "User2",
+    "email": "est2@test.com",
+    "foto": "",
+    "amigos": [
+      "est_user_1",
+      "sara"
+    ]
+  },
+  "mathi": {
+    "usuario": "mathi",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$KGUsBUCIcU7pHeM8p/QeAw$Tuehi0yUZSQBzBNDa5nCqow+k2jXyk919LKzZI+XKZg",
+    "nombre": "Mathias",
+    "apellido": "Fernandez",
+    "email": "praraora@gmail.com",
+    "foto": "C:/Users/Administrator/Pictures/Wallpaper 2.jpg",
+    "amigos": [
+      "sara"
+    ]
+  },
+  "sara": {
+    "usuario": "sara",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$bu2911orBcC49/4/R2gNYQ$xfmnLHq4xTdGI90EqOwSbBKMgA3dwAJpJrt6iAUd9Dw",
+    "nombre": "Sara",
+    "apellido": "Calvo",
+    "email": "mathiascalvof1@gmail.com",
+    "foto": "C:/Users/Administrator/Pictures/Wallpaper 1.jpg",
+    "amigos": [
+      "mathi",
+      "est_user_1",
+      "est_user_2"
+    ]
+  }
 }

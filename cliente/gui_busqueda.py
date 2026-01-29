@@ -221,7 +221,7 @@ class ContenidoBusqueda(QWidget):
             return
         
         # Buscar en datos locales
-        from cliente.datos_local import buscar_usuarios as buscar
+        from cliente.auth_client import buscar_usuarios as buscar
         resultados = buscar(texto)
         
         # Filtrar el usuario actual
@@ -240,7 +240,7 @@ class ContenidoBusqueda(QWidget):
     def ver_perfil_usuario(self, usuario_data):
         """Abre un perfil en modo lectura para otro usuario"""
         try:
-            from cliente.datos_local import cargar_usuarios, obtener_amigos_completos
+            from cliente.auth_client import cargar_usuarios, obtener_amigos_completos
             from cliente.gui_perfil_publico import ContenidoPerfilPublico
 
             usuarios = cargar_usuarios()
