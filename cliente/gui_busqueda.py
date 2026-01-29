@@ -9,7 +9,6 @@ from cliente.estilos import *
 
 
 class WidgetResultadoBusqueda(QWidget):
-    """Widget para mostrar un resultado de búsqueda"""
     ver_perfil_clicked = pyqtSignal(dict)
     
     def __init__(self, usuario_data):
@@ -18,7 +17,6 @@ class WidgetResultadoBusqueda(QWidget):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Crea el widget"""
         layout = QHBoxLayout()
         layout.setContentsMargins(15, 12, 15, 12)
         layout.setSpacing(15)
@@ -108,7 +106,6 @@ class WidgetResultadoBusqueda(QWidget):
 
 
 class ContenidoBusqueda(QWidget):
-    """Contenido de la pantalla de búsqueda"""
     
     def __init__(self, usuario_data, parent=None):
         super().__init__(parent)
@@ -118,13 +115,11 @@ class ContenidoBusqueda(QWidget):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz"""
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
         self.setLayout(layout_principal)
         
-        # Header con barra de búsqueda
         self.crear_header(layout_principal)
         
         # Scroll para resultados
@@ -157,7 +152,6 @@ class ContenidoBusqueda(QWidget):
         layout_principal.addWidget(scroll)
     
     def crear_header(self, layout):
-        """Crea el header con búsqueda"""
         frame_header = QFrame()
         frame_header.setStyleSheet(f"""
             QFrame {{

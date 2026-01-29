@@ -9,7 +9,6 @@ from cliente.estilos import *
 
 
 class ContenidoPerfil(QWidget):
-    """Contenido de la pantalla de perfil (sin navegación)"""
     
     def __init__(self, usuario_data, parent=None):
         super().__init__(parent)
@@ -18,7 +17,6 @@ class ContenidoPerfil(QWidget):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura el contenido del perfil"""
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
@@ -37,12 +35,9 @@ class ContenidoPerfil(QWidget):
         layout_contenido.setSpacing(25)
         contenido.setLayout(layout_contenido)
         
-        
         self.crear_header(layout_contenido)
         
-        
         self.crear_estadisticas(layout_contenido)
-        
         
         self.crear_info_rapida(layout_contenido)
         
@@ -50,7 +45,6 @@ class ContenidoPerfil(QWidget):
         layout_principal.addWidget(scroll)
     
     def crear_header(self, layout):
-        """Header con foto y nombre"""
         layout_header = QVBoxLayout()
         layout_header.setSpacing(12)
         layout_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -116,7 +110,6 @@ class ContenidoPerfil(QWidget):
         layout.addLayout(layout_header)
     
     def crear_estadisticas(self, layout):
-        """Card con estadísticas"""
         frame = QFrame()
         frame.setStyleSheet(f"""
             QFrame {{
@@ -144,7 +137,6 @@ class ContenidoPerfil(QWidget):
         layout.addWidget(frame)
     
     def crear_stat_widget(self, icono, numero, texto):
-        """Crea un widget de estadística"""
         widget = QWidget()
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -188,8 +180,6 @@ class ContenidoPerfil(QWidget):
         return widget, label_numero
     
     def crear_info_rapida(self, layout):
-        """Información rápida del perfil"""
-        # Título
         label_titulo = QLabel("Información")
         label_titulo.setStyleSheet(f"""
             QLabel {{
@@ -233,7 +223,6 @@ class ContenidoPerfil(QWidget):
         layout.addWidget(frame)
     
     def crear_item_info(self, icono, titulo, valor):
-        """Crea un item de información"""
         widget = QWidget()
         layout = QHBoxLayout()
         layout.setContentsMargins(10, 10, 10, 10)
@@ -282,7 +271,6 @@ class ContenidoPerfil(QWidget):
         return widget, label_valor
     
     def cargar_foto_circular(self, ruta):
-        """Carga foto en formato circular"""
         pixmap = QPixmap(ruta)
         if not pixmap.isNull():
             pixmap = pixmap.scaled(

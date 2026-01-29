@@ -19,8 +19,6 @@ class VentanaRegistro(QMainWindow):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz de usuario"""
-        # Configuración de la ventana
         self.setWindowTitle("SocialTec - Crear Cuenta")
         self.resize(440, 720)
         self.setMinimumSize(400, 640)
@@ -50,15 +48,11 @@ class VentanaRegistro(QMainWindow):
         widget_central.setLayout(layout_ventana)
         layout_ventana.addWidget(scroll)
         
-        
         self.crear_header(layout_principal)
-        
         
         self.crear_selector_foto(layout_principal)
         
-        
         self.crear_formulario(layout_principal)
-        
         
         self.label_mensaje = QLabel("")
         self.label_mensaje.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -67,14 +61,12 @@ class VentanaRegistro(QMainWindow):
         self.label_mensaje.setWordWrap(True)
         layout_principal.addWidget(self.label_mensaje)
         
-        
         self.btn_registrar = QPushButton("Crear Cuenta")
         self.btn_registrar.setStyleSheet(ESTILO_BOTON_PRIMARIO)
         self.btn_registrar.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_registrar.setMinimumHeight(50)
         self.btn_registrar.clicked.connect(self.registrar_usuario)
         layout_principal.addWidget(self.btn_registrar)
-        
         
         layout_login = QHBoxLayout()
         layout_login.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -91,11 +83,9 @@ class VentanaRegistro(QMainWindow):
         layout_login.addWidget(self.btn_ir_login)
         layout_principal.addLayout(layout_login)
         
-        # Espaciador
         layout_principal.addSpacing(20)
     
     def crear_header(self, layout):
-        """Crea el encabezado"""
         titulo = QLabel("Crear Cuenta")
         titulo.setStyleSheet(ESTILO_TITULO)
         titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -109,8 +99,6 @@ class VentanaRegistro(QMainWindow):
         layout.addSpacing(10)
     
     def crear_selector_foto(self, layout):
-        """Crea el selector de foto de perfil"""
-        # Contenedor centrado
         layout_foto = QVBoxLayout()
         layout_foto.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
@@ -140,7 +128,6 @@ class VentanaRegistro(QMainWindow):
         layout.addLayout(layout_foto)
     
     def crear_formulario(self, layout):
-        """Crea el formulario de registro"""
         frame = QFrame()
         frame.setStyleSheet(ESTILO_FRAME)
         layout_form = QVBoxLayout()
@@ -231,7 +218,6 @@ class VentanaRegistro(QMainWindow):
         layout.addWidget(frame)
     
     def seleccionar_foto(self):
-        """Abre diálogo para seleccionar foto"""
         archivo, _ = QFileDialog.getOpenFileName(
             self,
             "Seleccionar foto de perfil",
@@ -244,7 +230,6 @@ class VentanaRegistro(QMainWindow):
             self.mostrar_foto_preview(archivo)
     
     def mostrar_foto_preview(self, ruta):
-        """Muestra preview de la foto en formato circular"""
         pixmap = QPixmap(ruta)
         
         if not pixmap.isNull():
@@ -281,7 +266,6 @@ class VentanaRegistro(QMainWindow):
             """)
     
     def registrar_usuario(self):
-        """Valida y registra el usuario"""
         nombre = self.input_nombre.text().strip()
         apellido = self.input_apellido.text().strip()
         usuario = self.input_usuario.text().strip()

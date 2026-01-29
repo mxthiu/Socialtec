@@ -16,7 +16,6 @@ from cliente.gui_configuracion import ContenidoConfiguracion
 
 
 class BotonNavegacion(QPushButton):
-    """Botón personalizado para la barra de navegación"""
     
     def __init__(self, icono, texto):
         super().__init__()
@@ -28,7 +27,6 @@ class BotonNavegacion(QPushButton):
         self.actualizar_estilo()
     
     def actualizar_estilo(self):
-        """Actualiza el estilo según si está activo o no"""
         if self.activo:
             self.setStyleSheet(f"""
                 QPushButton {{
@@ -55,7 +53,6 @@ class BotonNavegacion(QPushButton):
             """)
     
     def set_activo(self, activo):
-        """Marca el botón como activo o inactivo"""
         self.activo = activo
         self.actualizar_estilo()
 
@@ -83,7 +80,6 @@ class VentanaMainMenu(QMainWindow):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz principal"""
         self.setWindowTitle("SocialTec")
         self.resize(420, 680)
         self.setMinimumSize(380, 620)
@@ -99,33 +95,26 @@ class VentanaMainMenu(QMainWindow):
         layout_principal.setSpacing(0)
         widget_central.setLayout(layout_principal)
         
-        
         self.stack_pantallas = QStackedWidget()
         
-
         self.pantalla_perfil = ContenidoPerfil(self.usuario_data, self)
         self.pantalla_busqueda = ContenidoBusqueda(self.usuario_data, self)
         self.pantalla_amigos = ContenidoAmigos(self.usuario_data, self)
         # self.pantalla_grafo = ContenidoGrafo(self.usuario_data, self)  # TODO: Implementar
         self.pantalla_config = ContenidoConfiguracion(self.usuario_data, self)
         
-        # Agregar pantallas al stack
-        self.stack_pantallas.addWidget(self.pantalla_perfil)      # índice 0
+        self.stack_pantallas.addWidget(self.pantalla_perfil)
         self.stack_pantallas.addWidget(self.pantalla_busqueda)    # índice 1
-        self.stack_pantallas.addWidget(self.pantalla_amigos)      # índice 2
-        # self.stack_pantallas.addWidget(self.pantalla_grafo)     # índice 3 - TODO
-        self.stack_pantallas.addWidget(self.pantalla_config)      # índice 3 (antes 4)
+        self.stack_pantallas.addWidget(self.pantalla_amigos)
+        self.stack_pantallas.addWidget(self.pantalla_config)
         
         layout_principal.addWidget(self.stack_pantallas)
         
-        
         self.crear_barra_navegacion(layout_principal)
         
-        # Iniciar en perfil
         self.cambiar_pantalla(0)
     
     def crear_barra_navegacion(self, layout):
-        """Crea la barra de navegación inferior"""
         barra = QFrame()
         barra.setFixedHeight(70)
         barra.setStyleSheet(f"""
@@ -140,13 +129,11 @@ class VentanaMainMenu(QMainWindow):
         layout_barra.setSpacing(0)
         barra.setLayout(layout_barra)
         
-        # Botones de navegación
         botones_info = [
             ("", "Perfil", 0),
             ("", "Buscar", 1),
             ("", "Amigos", 2),
-            # ("", "Grafo", 3),  # TODO: Implementar
-            ("", "Config", 3),  # Cambió de índice 4 a 3
+            ("", "Config", 3),
         ]
         
         for icono, texto, indice in botones_info:
@@ -158,15 +145,12 @@ class VentanaMainMenu(QMainWindow):
         layout.addWidget(barra)
     
     def cambiar_pantalla(self, indice):
-        """Cambia la pantalla mostrada y actualiza botones"""
         self.stack_pantallas.setCurrentIndex(indice)
         
-        # Actualizar estado de botones
         for i, boton in enumerate(self.botones_nav):
             boton.set_activo(i == indice)
     
     def actualizar_datos_usuario(self):
-        """Actualiza los datos en todas las pantallas cuando cambian"""
         try:
             from cliente.auth_client import obtener_usuario_completo
 
@@ -180,14 +164,12 @@ class VentanaMainMenu(QMainWindow):
         self.pantalla_amigos.actualizar_datos()
     
     def cerrar_sesion(self):
-        """Cierra sesión y vuelve al login"""
         from cliente.gui_login import VentanaLogin
         self.ventana_login = VentanaLogin()
         self.ventana_login.show()
         self.close()
     
     def navegar_a_pantalla(self, pantalla_widget):
-        """Navega a una pantalla interna guardando el historial"""
         indice_actual = self.stack_pantallas.currentIndex()
         self.historial_navegacion.append(indice_actual)
         
@@ -199,7 +181,6 @@ class VentanaMainMenu(QMainWindow):
             boton.set_activo(False)
     
     def volver_atras(self):
-        """Vuelve a la pantalla anterior"""
         if not self.historial_navegacion:
             return
         

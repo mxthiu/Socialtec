@@ -12,14 +12,12 @@ Red social basada en grafos con arquitectura cliente/servidor usando sockets TCP
 ## Ejecutar
 
 ### 1) Servidor
-```bash
-python scripts/run_server.py
-```
+
+python -c "import sys; sys.path.insert(0, '.'); from servidor.gui_servidor import main; main()"
 
 ### 2) Cliente
-```bash
-python scripts/run_client.py
-```
+
+python -c "import sys; sys.path.insert(0, '.'); from cliente.gui_login import VentanaLogin; from PyQt6.QtWidgets import QApplication; app = QApplication(sys.argv); ventana = VentanaLogin(); ventana.show(); sys.exit(app.exec())"
 
 ## Estructura (alto nivel)
 - `servidor/`: lógica del servidor TCP + autenticación + persistencia + GUI del servidor

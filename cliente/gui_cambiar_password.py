@@ -8,7 +8,6 @@ from cliente.estilos import *
 
 
 class ContenidoCambiarPassword(QWidget):
-    """Pantalla para cambiar contraseña con verificación por email"""
     
     def __init__(self, usuario_data, parent=None):
         super().__init__(parent)
@@ -18,7 +17,6 @@ class ContenidoCambiarPassword(QWidget):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz"""
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
@@ -69,13 +67,10 @@ class ContenidoCambiarPassword(QWidget):
         layout_contenido.setSpacing(20)
         contenido.setLayout(layout_contenido)
         
-        # Stack para las 2 pantallas
         self.stack = QStackedWidget()
         
-        # Pantalla 1: Solicitar código
         self.pantalla_solicitar = self.crear_pantalla_solicitar()
         
-        # Pantalla 2: Ingresar código y nueva contraseña
         self.pantalla_codigo = self.crear_pantalla_codigo()
         
         self.stack.addWidget(self.pantalla_solicitar)
@@ -87,7 +82,6 @@ class ContenidoCambiarPassword(QWidget):
         layout_principal.addWidget(contenido)
     
     def crear_pantalla_solicitar(self):
-        """Primera pantalla: enviar código por email"""
         widget = QWidget()
         layout = QVBoxLayout()
         layout.setSpacing(20)
@@ -170,7 +164,6 @@ class ContenidoCambiarPassword(QWidget):
         return widget
     
     def crear_pantalla_codigo(self):
-        """Segunda pantalla: ingresar código y nueva contraseña"""
         widget = QWidget()
         layout = QVBoxLayout()
         layout.setSpacing(15)

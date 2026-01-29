@@ -12,7 +12,6 @@ from cliente.estilos import *
 
 
 class WidgetAmigo(QWidget):
-    """Widget personalizado para mostrar un amigo en la lista"""
     eliminar_clicked = pyqtSignal(str)
     
     def __init__(self, nombre, apellido, usuario, foto_path=None):
@@ -22,7 +21,6 @@ class WidgetAmigo(QWidget):
         self.inicializar_ui(foto_path)
     
     def inicializar_ui(self, foto_path):
-        """Crea el widget del amigo"""
         layout = QHBoxLayout()
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(15)
@@ -113,7 +111,6 @@ class WidgetAmigo(QWidget):
         layout.addWidget(btn_eliminar)
     
     def cargar_foto_circular(self, label, ruta):
-        """Carga una foto en formato circular"""
         pixmap = QPixmap(ruta)
         if not pixmap.isNull():
             pixmap = pixmap.scaled(
@@ -160,7 +157,6 @@ class VentanaPerfil(QMainWindow):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz"""
         self.setWindowTitle("SocialTec - Mi Perfil")
         self.setFixedSize(500, 700)
         self.setStyleSheet(ESTILO_VENTANA)
@@ -175,9 +171,7 @@ class VentanaPerfil(QMainWindow):
         layout_principal.setSpacing(0)
         widget_central.setLayout(layout_principal)
         
-        
         self.crear_barra_superior(layout_principal)
-        
         
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -191,15 +185,11 @@ class VentanaPerfil(QMainWindow):
         layout_contenido.setSpacing(20)
         contenido.setLayout(layout_contenido)
         
-        
         self.crear_header_perfil(layout_contenido)
-        
         
         self.crear_estadisticas(layout_contenido)
         
-        
         self.crear_lista_amigos(layout_contenido)
-        
         
         btn_cerrar_sesion = QPushButton("Cerrar Sesión")
         btn_cerrar_sesion.setStyleSheet(f"""
@@ -225,7 +215,6 @@ class VentanaPerfil(QMainWindow):
         layout_principal.addWidget(scroll)
     
     def crear_barra_superior(self, layout):
-        """Crea la barra de búsqueda tipo Facebook"""
         barra = QFrame()
         barra.setFixedHeight(60)
         barra.setStyleSheet(f"""
@@ -262,8 +251,6 @@ class VentanaPerfil(QMainWindow):
         layout.addWidget(barra)
     
     def crear_header_perfil(self, layout):
-        """Crea el header con foto y nombre"""
-        # Contenedor horizontal para centrar
         layout_h = QHBoxLayout()
         layout_h.addStretch()
         

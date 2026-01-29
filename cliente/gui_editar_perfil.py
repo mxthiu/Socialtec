@@ -10,7 +10,6 @@ from cliente.estilos import *
 
 
 class ContenidoEditarPerfil(QWidget):
-    """Pantalla para editar el perfil"""
     perfil_actualizado = pyqtSignal(dict)
     
     def __init__(self, usuario_data, parent=None):
@@ -21,7 +20,6 @@ class ContenidoEditarPerfil(QWidget):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz"""
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
@@ -104,9 +102,7 @@ class ContenidoEditarPerfil(QWidget):
         
         layout_principal.addWidget(scroll)
         
-        
         self.crear_selector_foto(layout_scroll)
-        
         
         self.crear_formulario(layout_scroll)
         
@@ -119,14 +115,11 @@ class ContenidoEditarPerfil(QWidget):
         self.label_mensaje.setMinimumHeight(40)
         layout_scroll.addWidget(self.label_mensaje)
         
-        
         layout_scroll.addStretch()
-        
         
         self.crear_botones(layout_principal)
     
     def crear_selector_foto(self, layout):
-        """Selector de foto"""
         layout_foto = QVBoxLayout()
         layout_foto.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
@@ -165,7 +158,6 @@ class ContenidoEditarPerfil(QWidget):
         layout.addSpacing(10)
     
     def crear_formulario(self, layout):
-        """Formulario con campos editables"""
         frame = QFrame()
         frame.setStyleSheet(ESTILO_FRAME)
         layout_form = QVBoxLayout()
@@ -233,7 +225,6 @@ class ContenidoEditarPerfil(QWidget):
         layout.addWidget(frame)
     
     def crear_botones(self, layout):
-        """Botones de acción en la parte inferior"""
         footer = QFrame()
         footer.setStyleSheet(f"""
             QFrame {{
@@ -280,7 +271,6 @@ class ContenidoEditarPerfil(QWidget):
         layout.addWidget(footer)
     
     def seleccionar_foto(self):
-        """Selecciona nueva foto"""
         archivo, _ = QFileDialog.getOpenFileName(
             self,
             "Seleccionar foto de perfil",
@@ -293,7 +283,6 @@ class ContenidoEditarPerfil(QWidget):
             self.cargar_foto_circular(archivo)
     
     def cargar_foto_circular(self, ruta):
-        """Carga foto en formato circular"""
         pixmap = QPixmap(ruta)
         if not pixmap.isNull():
             pixmap = pixmap.scaled(

@@ -9,7 +9,6 @@ from cliente.estilos import *
 
 
 class WidgetAmigoLista(QWidget):
-    """Widget para mostrar un amigo en la lista"""
     eliminar_clicked = pyqtSignal(str)
     ver_perfil_clicked = pyqtSignal(dict)
     
@@ -19,7 +18,6 @@ class WidgetAmigoLista(QWidget):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Crea el widget"""
         layout = QHBoxLayout()
         layout.setContentsMargins(15, 12, 15, 12)
         layout.setSpacing(15)
@@ -107,12 +105,10 @@ class WidgetAmigoLista(QWidget):
         layout.addWidget(btn_eliminar)
     
     def mousePressEvent(self, event):
-        """Click para ver perfil"""
         self.ver_perfil_clicked.emit(self.usuario_data)
 
 
 class ContenidoAmigos(QWidget):
-    """Contenido de la pantalla de amigos"""
     
     def __init__(self, usuario_data, parent=None):
         super().__init__(parent)
@@ -120,25 +116,21 @@ class ContenidoAmigos(QWidget):
         self.parent_window = parent
         self.widgets_amigos = []
         
-        # Timer para actualizar lista cada 5 segundos
         self.timer_actualizacion = QTimer()
         self.timer_actualizacion.timeout.connect(self.actualizar_datos)
-        self.timer_actualizacion.setInterval(5000)  # 5 segundos
+        self.timer_actualizacion.setInterval(5000)
         
         self.inicializar_ui()
         self.timer_actualizacion.start()
     
     def inicializar_ui(self):
-        """Configura la interfaz"""
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
         self.setLayout(layout_principal)
         
-        # Header
         self.crear_header(layout_principal)
         
-        # Scroll para amigos
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
@@ -151,13 +143,11 @@ class ContenidoAmigos(QWidget):
         self.layout_amigos.setSpacing(12)
         self.contenedor_amigos.setLayout(self.layout_amigos)
         
-        # Cargar amigos
         self.actualizar_lista_amigos()
         
         layout_principal.addWidget(scroll)
     
     def crear_header(self, layout):
-        """Crea el header"""
         frame_header = QFrame()
         frame_header.setStyleSheet(f"""
             QFrame {{
@@ -206,7 +196,6 @@ class ContenidoAmigos(QWidget):
         layout.addWidget(frame_header)
     
     def actualizar_lista_amigos(self):
-        """Actualiza la lista de amigos"""
         while self.layout_amigos.count():
             item = self.layout_amigos.takeAt(0)
             widget = item.widget()
@@ -254,7 +243,6 @@ class ContenidoAmigos(QWidget):
         self.layout_amigos.addStretch()
     
     def filtrar_amigos(self):
-        """Filtra la lista en tiempo real"""
         texto = self.input_filtro.text().lower()
         
         for widget in self.widgets_amigos:
@@ -268,7 +256,6 @@ class ContenidoAmigos(QWidget):
                     widget.hide()
     
     def eliminar_amigo(self, usuario):
-        """Elimina un amigo"""
         try:
             from cliente.dialogos import confirmar_eliminar_amigo
             from cliente.auth_client import eliminar_amistad as eliminar_amigo_db, cargar_usuarios, obtener_amigos_completos
@@ -301,7 +288,6 @@ class ContenidoAmigos(QWidget):
             return
     
     def ver_perfil(self, usuario_data):
-        """Ver perfil de un amigo en modo lectura"""
         try:
             from cliente.auth_client import cargar_usuarios, obtener_amigos_completos
             from cliente.gui_perfil_publico import ContenidoPerfilPublico
@@ -324,7 +310,6 @@ class ContenidoAmigos(QWidget):
             return
     
     def actualizar_datos(self):
-        """Recarga los datos"""
         try:
             from cliente.auth_client import cargar_usuarios, obtener_amigos_completos
 
@@ -339,12 +324,10 @@ class ContenidoAmigos(QWidget):
         self.actualizar_lista_amigos()
     
     def hideEvent(self, event):
-        """Detener timer cuando se oculta la pantalla"""
         self.timer_actualizacion.stop()
         super().hideEvent(event)
     
     def showEvent(self, event):
-        """Reiniciar timer cuando se muestra la pantalla"""
         self.timer_actualizacion.start()
         super().showEvent(event)
 

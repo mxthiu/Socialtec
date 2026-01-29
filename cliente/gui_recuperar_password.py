@@ -9,7 +9,6 @@ from cliente.estilos import *
 
 
 class VentanaRecuperarPassword(QDialog):
-    """Ventana para recuperar/cambiar contraseña sin autenticación"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -18,7 +17,6 @@ class VentanaRecuperarPassword(QDialog):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz"""
         self.setWindowTitle("Recuperar Contraseña")
         self.resize(440, 700)
         self.setMinimumSize(400, 620)
@@ -58,7 +56,6 @@ class VentanaRecuperarPassword(QDialog):
         
         layout_principal.addWidget(header)
         
-        
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet(f"""
@@ -86,24 +83,19 @@ class VentanaRecuperarPassword(QDialog):
         
         layout_principal.addWidget(scroll)
         
-        
         self.pantalla_usuario = self.crear_pantalla_usuario()
-        
         
         self.pantalla_codigo = self.crear_pantalla_codigo()
         
-        # Agregar pantallas al scroll
         layout_scroll.addWidget(self.pantalla_usuario)
         layout_scroll.addWidget(self.pantalla_codigo)
         self.pantalla_codigo.setVisible(False)
         
         layout_scroll.addStretch()
         
-        
         self.crear_botones(layout_principal)
     
     def crear_pantalla_usuario(self):
-        """Primera pantalla: seleccionar usuario y enviar código"""
         frame = QFrame()
         layout = QVBoxLayout()
         layout.setSpacing(15)
@@ -162,7 +154,6 @@ class VentanaRecuperarPassword(QDialog):
         return frame
     
     def crear_pantalla_codigo(self):
-        """Segunda pantalla: ingresar código y nueva contraseña"""
         frame = QFrame()
         layout = QVBoxLayout()
         layout.setSpacing(15)
@@ -236,7 +227,6 @@ class VentanaRecuperarPassword(QDialog):
         return frame
     
     def crear_botones(self, layout):
-        """Botones de acción"""
         footer = QFrame()
         footer.setStyleSheet(f"""
             QFrame {{
@@ -284,7 +274,6 @@ class VentanaRecuperarPassword(QDialog):
         layout.addWidget(footer)
     
     def cargar_usuarios(self):
-        """Carga la lista de usuarios disponibles"""
         from cliente.auth_client import cargar_usuarios
         
         usuarios_dict = cargar_usuarios()

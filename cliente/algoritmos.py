@@ -1,7 +1,5 @@
-# algoritmos.py
 
 def merge_sort_amigos(lista_amigos):
-    """Ordena amigos alfabéticamente por nombre completo usando Merge Sort"""
     if len(lista_amigos) <= 1:
         return lista_amigos
     
@@ -13,7 +11,6 @@ def merge_sort_amigos(lista_amigos):
 
 
 def merge(izquierda, derecha):
-    """Combina dos listas ordenadas"""
     resultado = []
     i = 0
     j = 0

@@ -7,7 +7,8 @@
     "email": "est1@test.com",
     "foto": "",
     "amigos": [
-      "est_user_2"
+      "est_user_2",
+      "mathi"
     ]
   },
   "est_user_2": {
@@ -19,7 +20,8 @@
     "foto": "",
     "amigos": [
       "est_user_1",
-      "mathi"
+      "mathi",
+      "sara"
     ]
   },
   "mathi": {
@@ -28,22 +30,25 @@
     "nombre": "Mathias",
     "apellido": "Fernandez",
     "email": "praraora@gmail.com",
-    "foto": "C:/Users/Administrator/Pictures/Wallpaper 2.jpg",
+    "foto": "C:/Users/mathi/Documents/e17e6ec9e0452d1e26aa308564308ba7.jpg",
     "amigos": [
       "est_user_2",
       "sara",
-      "sofi"
+      "sofi",
+      "est_user_1",
+      "test_cambio_pwd"
     ]
   },
   "sara": {
     "usuario": "sara",
-    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$bu2911orBcC49/4/R2gNYQ$xfmnLHq4xTdGI90EqOwSbBKMgA3dwAJpJrt6iAUd9Dw",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$lfI+BwAgpLSW0vpf651Tag$q8jPgZWtkoPmrrsQd7S1SEq1MZPEfNqyvMO4zEq3cuw",
     "nombre": "Sara",
     "apellido": "Calvo",
     "email": "mathiascalvof1@gmail.com",
-    "foto": "C:/Users/Administrator/Pictures/Wallpaper 1.jpg",
+    "foto": "C:/Users/mathi/Documents/2323e4c8382ec800161667f13b40ddb8.jpg",
     "amigos": [
-      "mathi"
+      "mathi",
+      "est_user_2"
     ]
   },
   "sofi": {
@@ -64,6 +69,8 @@
     "apellido": "Usuario",
     "email": "test@example.com",
     "foto": "",
-    "amigos": []
+    "amigos": [
+      "mathi"
+    ]
   }
 }

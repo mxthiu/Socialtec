@@ -1,21 +1,4 @@
-"""
-Visualización del grafo usando NetworkX y Matplotlib.
 
-Funciones principales:
-  - visualizar_grafo: Renderiza el grafo completo a PNG
-  - visualizar_camino: Resalta un camino específico (BFS/DFS)
-  - estadisticas_visuales: Genera histograma de distribución de amigos
-  
-Uso:
-    from grafo.visualizacion import visualizar_grafo, visualizar_camino
-    
-    # Visualizar grafo completo
-    ruta = visualizar_grafo(grafo, "red_social.png")
-    
-    # Visualizar camino entre usuarios
-    camino = encontrar_camino_bfs(grafo, "alice", "bob")
-    visualizar_camino(grafo, camino, "camino.png")
-"""
 
 from __future__ import annotations
 
@@ -26,7 +9,7 @@ from typing import Optional, Set
 try:
     import networkx as nx
     import matplotlib
-    matplotlib.use('Agg')  # Backend sin GUI para evitar problemas en servidores
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 except ImportError as e:
     raise ImportError(
@@ -38,7 +21,6 @@ from grafo.grafo import Grafo
 
 
 class VisualizacionError(Exception):
-    """Error al generar visualización del grafo."""
     pass
 
 
@@ -51,53 +33,26 @@ def visualizar_grafo(
     tamaño_figura: tuple[int, int] = (12, 8),
     dpi: int = 100
 ) -> str:
-    """
-    Genera una visualización del grafo usando NetworkX y Matplotlib.
-    
-    Args:
-        grafo: Instancia de Grafo con los datos de la red social
-        ruta_salida: Path donde se guardará la imagen (PNG por defecto)
-        titulo: Título del grafo
-        resaltar_usuarios: Set de usernames a resaltar (ej. en un path)
-        mostrar_etiquetas: Si mostrar los nombres de usuarios
-        tamaño_figura: Tupla (ancho, alto) en pulgadas
-        dpi: Resolución de la imagen
-    
-    Returns:
-        str: Ruta absoluta del archivo generado
-    
-    Raises:
-        VisualizacionError: Si hay error al generar o guardar la imagen
-    """
     try:
-        # Crear grafo de NetworkX
         G = nx.Graph()
         
-        # Agregar nodos (usuarios)
         usuarios = grafo.usuarios()
         if not usuarios:
             raise VisualizacionError("El grafo está vacío, no hay usuarios para visualizar.")
         
         G.add_nodes_from(usuarios)
         
-        # Agregar aristas (amistades)
         for usuario in usuarios:
             amigos = grafo.amigos_de(usuario)
             for amigo in amigos:
-                # Evitar duplicados (A-B ya cubre B-A en grafo no dirigido)
                 if usuario < amigo:
                     G.add_edge(usuario, amigo)
         
-        # Configurar figura
         plt.figure(figsize=tamaño_figura, dpi=dpi)
         plt.title(titulo, fontsize=16, fontweight='bold')
         plt.axis('off')
         
-        # Layout (distribución de nodos)
-        # spring_layout da buenos resultados para grafos sociales
         pos = nx.spring_layout(G, k=0.5, iterations=50, seed=42)
-        
-        # Colorear nodos
         node_colors = []
         for node in G.nodes():
             if resaltar_usuarios and node in resaltar_usuarios:

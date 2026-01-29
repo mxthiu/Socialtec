@@ -1,17 +1,4 @@
-"""
-Algoritmos de grafos: BFS/DFS para encontrar caminos y estadísticas.
 
-Funciones principales:
-  - encontrar_camino_bfs: Camino más corto entre dos usuarios (BFS)
-  - encontrar_camino_dfs: Alternativa con DFS
-  - calcular_estadisticas: Análisis del grafo (más/menos amigos, promedio)
-
-Uso:
-    from grafo.algoritmos import encontrar_camino_bfs, calcular_estadisticas
-    
-    camino = encontrar_camino_bfs(grafo, "user1", "user2")
-    stats = calcular_estadisticas(grafo)
-"""
 
 from __future__ import annotations
 
@@ -26,16 +13,18 @@ class AlgoritmosGrafoError(Exception):
     pass
 
 
-# =========================
-# Path (BFS)
-# =========================
-def encontrar_camino_bfs(grafo: Grafo, inicio: str, fin: str) -> Optional[List[str]]:
-    """
-    Retorna un camino (lista de usernames) entre inicio y fin usando BFS.
-    Si no existe, retorna None.
+@dataclass(frozen=True)
+class EstadisticasGrafo:
+    usuario_con_mas_amigos: Optional[str]
+    max_amigos: int
+    usuario_con_menos_amigos: Optional[str]
+    min_amigos: int
+    promedio_amigos: float
+    cantidad_usuarios: int
+    cantidad_amistades: int
 
-    - BFS garantiza el camino con menor cantidad de saltos (amigos).
-    """
+
+def encontrar_camino_bfs(grafo: Grafo, inicio: str, fin: str) -> Optional[List[str]]:
     inicio = inicio.strip()
     fin = fin.strip()
     if not inicio or not fin:
@@ -73,14 +62,7 @@ def _reconstruir_camino(padre: Dict[str, Optional[str]], fin: str) -> List[str]:
     return camino
 
 
-# =========================
-# (Opcional) Path (DFS)
-# =========================
 def encontrar_camino_dfs(grafo: Grafo, inicio: str, fin: str) -> Optional[List[str]]:
-    """
-    DFS encuentra *algún* camino (no necesariamente el más corto).
-    Útil si quieren mostrar ambos enfoques.
-    """
     inicio = inicio.strip()
     fin = fin.strip()
     if not grafo.existe_usuario(inicio) or not grafo.existe_usuario(fin):
@@ -109,29 +91,7 @@ def encontrar_camino_dfs(grafo: Grafo, inicio: str, fin: str) -> Optional[List[s
     return _reconstruir_camino(padre, fin)
 
 
-# =========================
-# Estadísticas del grafo
-# =========================
-@dataclass(frozen=True)
-class EstadisticasGrafo:
-    usuario_con_mas_amigos: Optional[str]
-    max_amigos: int
-    usuario_con_menos_amigos: Optional[str]
-    min_amigos: int
-    promedio_amigos: float
-    cantidad_usuarios: int
-    cantidad_amistades: int
-
-
 def calcular_estadisticas(grafo: Grafo) -> EstadisticasGrafo:
-    """
-    Calcula:
-      - usuario con más amigos
-      - usuario con menos amigos
-      - promedio de amigos por usuario
-
-    Nota: en grafo no dirigido, el promedio de amigos = suma(grados)/n.
-    """
     usuarios = grafo.usuarios()
     n = len(usuarios)
 

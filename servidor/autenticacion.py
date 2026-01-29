@@ -1,6 +1,4 @@
-"""
-Autenticación con Passlib - Hash y verificación de credenciales
-"""
+
 
 from __future__ import annotations
 from typing import Dict, Tuple, Optional

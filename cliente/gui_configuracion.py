@@ -8,7 +8,6 @@ from cliente.estilos import *
 
 
 class ContenidoConfiguracion(QWidget):
-    """Contenido de configuración y estadísticas"""
     
     def __init__(self, usuario_data, parent=None):
         super().__init__(parent)
@@ -17,7 +16,6 @@ class ContenidoConfiguracion(QWidget):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz"""
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
@@ -49,12 +47,9 @@ class ContenidoConfiguracion(QWidget):
         """)
         layout_contenido.addWidget(label_titulo)
         
-        
         self.crear_seccion_estadisticas(layout_contenido)
         
-        
         self.crear_seccion_cuenta(layout_contenido)
-        
         
         self.crear_seccion_acciones(layout_contenido)
         
@@ -62,7 +57,6 @@ class ContenidoConfiguracion(QWidget):
         layout_principal.addWidget(scroll)
     
     def crear_seccion_estadisticas(self, layout):
-        """Crea la sección de estadísticas"""
         label_seccion = QLabel("Estadísticas")
         label_seccion.setStyleSheet(f"""
             QLabel {{
@@ -103,7 +97,6 @@ class ContenidoConfiguracion(QWidget):
         layout.addWidget(frame)
     
     def crear_stat_item(self, titulo, valor):
-        """Crea un item de estadística"""
         widget = QWidget()
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 5, 0, 5)
@@ -135,7 +128,6 @@ class ContenidoConfiguracion(QWidget):
         return widget
     
     def crear_seccion_cuenta(self, layout):
-        """Sección de información de cuenta"""
         label_seccion = QLabel("Cuenta")
         label_seccion.setStyleSheet(f"""
             QLabel {{
@@ -175,7 +167,6 @@ class ContenidoConfiguracion(QWidget):
         layout.addWidget(frame)
     
     def crear_info_item(self, titulo, valor):
-        """Crea un item de información"""
         widget = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 8, 10, 8)

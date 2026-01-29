@@ -8,7 +8,6 @@ from cliente.estilos import *
 
 
 class ContenidoEstadisticas(QWidget):
-    """Pantalla de estadísticas globales de la red social"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -16,7 +15,6 @@ class ContenidoEstadisticas(QWidget):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz"""
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
@@ -44,7 +42,6 @@ class ContenidoEstadisticas(QWidget):
         layout_principal.addWidget(scroll)
     
     def crear_header(self, layout):
-        """Header con título y botón volver"""
         frame = QFrame()
         frame.setStyleSheet(f"""
             QFrame {{
@@ -100,12 +97,10 @@ class ContenidoEstadisticas(QWidget):
         layout.addWidget(frame)
     
     def volver_atras(self):
-        """Vuelve a la pantalla anterior"""
         if self.parent_window:
             self.parent_window.volver_atras()
     
     def cargar_estadisticas(self, layout):
-        """Carga y muestra las estadísticas"""
         from cliente.auth_client import obtener_estadisticas_globales
         
         stats = obtener_estadisticas_globales()
@@ -161,7 +156,6 @@ class ContenidoEstadisticas(QWidget):
             )
     
     def crear_card_principal(self, layout, titulo, valor, descripcion):
-        """Card con estadística principal"""
         frame = QFrame()
         frame.setStyleSheet(f"""
             QFrame {{
@@ -214,7 +208,6 @@ class ContenidoEstadisticas(QWidget):
         layout.addWidget(frame)
     
     def crear_card_usuario(self, layout, titulo, usuario_data, color):
-        """Card con datos de un usuario específico"""
         frame = QFrame()
         frame.setStyleSheet(f"""
             QFrame {{
@@ -284,7 +277,6 @@ class ContenidoEstadisticas(QWidget):
         layout.addWidget(frame)
     
     def crear_top_usuarios(self, layout, usuarios):
-        """Lista de top usuarios"""
         label_titulo = QLabel("Top Usuarios por Amigos")
         label_titulo.setStyleSheet(f"""
             QLabel {{

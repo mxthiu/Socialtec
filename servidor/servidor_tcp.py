@@ -1,20 +1,4 @@
-"""
-Servidor TCP con soporte para multiples clientes usando threading.
 
-Arquitectura:
-  - Escucha en host/puerto configurado
-  - Acepta conexiones y crea un hilo por cliente
-  - Coordina acceso compartido al grafo con locks
-  - Despacha operaciones segun utils.protocolo
-
-Uso:
-    from servidor.servidor_tcp import ServidorTCP
-    
-    servidor = ServidorTCP(grafo=mi_grafo)
-    servidor.iniciar()
-    # ...
-    servidor.detener()
-"""
 
 from __future__ import annotations
 
@@ -61,7 +45,6 @@ class ServidorTCPError(Exception):
 
 @dataclass
 class ClienteInfo:
-    """Informacion de un cliente conectado."""
     conn: socket.socket
     addr: tuple[str, int]
     thread: threading.Thread
@@ -69,13 +52,6 @@ class ClienteInfo:
 
 
 class ServidorTCP:
-    """
-    Servidor TCP que maneja multiples clientes concurrentemente.
-    
-    Thread-safety:
-      - self._lock protege acceso al grafo y estructura de clientes
-      - Cada cliente tiene su propio thread
-    """
 
     def __init__(
         self,
@@ -84,13 +60,6 @@ class ServidorTCP:
         port: int = SERVER_PORT,
         on_log: Optional[Callable[[str], None]] = None,
     ):
-        """
-        Args:
-            grafo: Instancia de Grafo (compartida entre threads)
-            host: IP donde escuchar
-            port: Puerto TCP
-            on_log: Callback para logs (ej. para GUI)
-        """
         self.grafo = grafo
         self.host = host
         self.port = port
@@ -104,18 +73,10 @@ class ServidorTCP:
         self._thread_aceptar: Optional[threading.Thread] = None
 
     def _log(self, mensaje: str) -> None:
-        """Log seguro para threads."""
         if self.on_log:
             self.on_log(mensaje)
 
-    # =========================
-    # Ciclo de vida del servidor
-    # =========================
     def iniciar(self) -> None:
-        """
-        Inicia el servidor TCP.
-        Crea socket, bind, listen y lanza thread aceptador.
-        """
         if self._activo:
             raise ServidorTCPError("El servidor ya esta activo.")
 
@@ -139,9 +100,6 @@ class ServidorTCP:
             raise ServidorTCPError(f"Error al iniciar servidor: {e}") from e
 
     def detener(self) -> None:
-        """
-        Detiene el servidor y cierra todas las conexiones.
-        """
         if not self._activo:
             return
 
@@ -169,13 +127,7 @@ class ServidorTCP:
     def esta_activo(self) -> bool:
         return self._activo
 
-    # =========================
-    # Loop principal: aceptar conexiones
-    # =========================
     def _loop_aceptar_conexiones(self) -> None:
-        """
-        Loop que acepta conexiones entrantes y crea un thread por cliente.
-        """
         while self._activo:
             try:
                 conn, addr = self._socket.accept()
@@ -209,29 +161,18 @@ class ServidorTCP:
                 if self._activo:
                     self._log(f"[ERROR] Error aceptando conexion: {e}")
 
-    # =========================
-    # Handler de cliente individual
-    # =========================
     def _manejar_cliente(
         self, cliente_id: int, conn: socket.socket, addr: tuple[str, int]
     ) -> None:
-        """
-        Atiende las peticiones de un cliente hasta que se desconecta.
-        Desencripta automáticamente mensajes LOGIN y REGISTER.
-        """
         try:
             while self._activo:
                 try:
-                    # Recibir mensaje - desencriptar si es necesario
                     msg = recv_message_encrypted(conn)
                     self._log(
                         f"[RECV] Cliente #{cliente_id}: {msg.type}"
                     )
 
-                    # Despachar segun tipo
                     respuesta = self._despachar_mensaje(cliente_id, msg)
-
-                    # Enviar respuesta
                     send_response(conn, respuesta)
 
                 except ConnectionError:
@@ -246,7 +187,6 @@ class ServidorTCP:
                         break
 
         finally:
-            # Cleanup
             with self._lock:
                 self._clientes.pop(cliente_id, None)
             try:
@@ -255,13 +195,7 @@ class ServidorTCP:
                 pass
             self._log(f"[DISCONNECT] Cliente #{cliente_id} desconectado")
 
-    # =========================
-    # Despachador de mensajes
-    # =========================
     def _despachar_mensaje(self, cliente_id: int, msg: Message) -> Response:
-        """
-        Procesa un mensaje y retorna la respuesta correspondiente.
-        """
         tipo = msg.type
         payload = msg.payload
 
@@ -335,22 +269,13 @@ class ServidorTCP:
                 request_id=msg.request_id,
             )
 
-    # =========================
-    # Handlers especificos
-    # =========================
     def _handle_search_user(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Busca usuarios por nombre, apellido o usuario (query).
-        Payload: {"query": "..."}
-        """
         query = payload.get("query", "").strip().lower()
         if not query:
             return Response(ok=False, message="Query vacía", request_id=request_id)
 
         usuarios = cargar_usuarios()
         resultados = []
-        
-        # Buscar en nombre, apellido y usuario
         for username, datos in usuarios.items():
             nombre = datos.get("nombre", "").lower()
             apellido = datos.get("apellido", "").lower()
@@ -375,18 +300,9 @@ class ServidorTCP:
         )
 
     def _handle_get_profile(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Obtiene perfil completo de un usuario.
-        Payload: {"username": "..."}
-        """
-        # Mismo que search_user por ahora
         return self._handle_search_user(payload, request_id)
 
     def _handle_add_friend(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Agrega una amistad entre dos usuarios.
-        Payload: {"usuario1": "...", "usuario2": "..."}
-        """
         usuario1 = payload.get("usuario1", "").strip()
         usuario2 = payload.get("usuario2", "").strip()
 
@@ -405,7 +321,6 @@ class ServidorTCP:
                 ok=False, message=f"Usuario {usuario2} no existe", request_id=request_id
             )
 
-        # Agregar amistad en persistencia
         exito = agregar_amistad(usuario1, usuario2)
         if not exito:
             return Response(
@@ -418,10 +333,6 @@ class ServidorTCP:
     def _handle_remove_friend(
         self, payload: dict, request_id: Optional[str]
     ) -> Response:
-        """
-        Elimina una amistad.
-        Payload: {"usuario1": "...", "usuario2": "..."}
-        """
         usuario1 = payload.get("usuario1", "").strip()
         usuario2 = payload.get("usuario2", "").strip()
 
@@ -430,7 +341,6 @@ class ServidorTCP:
                 ok=False, message="Faltan usernames", request_id=request_id
             )
 
-        # Eliminar de persistencia
         exito = eliminar_amistad(usuario1, usuario2)
         if not exito:
             return Response(ok=False, message="No son amigos", request_id=request_id)
@@ -439,11 +349,6 @@ class ServidorTCP:
         return Response(ok=True, message="Amistad eliminada", request_id=request_id)
 
     def _handle_get_stats(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Calcula estadisticas globales desde persistencia.
-        Payload: {} (vacio)
-        """
-        # Obtener estadísticas del almacenamiento persistente (usuarios.json)
         stats = obtener_estadisticas_globales()
         
         # Retornar estructura como espera el cliente
@@ -456,10 +361,6 @@ class ServidorTCP:
         )
 
     def _handle_get_path(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Encuentra camino entre dos usuarios (BFS).
-        Payload: {"inicio": "...", "fin": "..."}
-        """
         inicio = payload.get("inicio", "").strip()
         fin = payload.get("fin", "").strip()
 
@@ -486,10 +387,6 @@ class ServidorTCP:
         )
 
     def _handle_login(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Autentica un usuario.
-        Payload: {"usuario": "...", "password": "..."}
-        """
         usuario = payload.get("usuario", "").strip()
         password = payload.get("password", "").strip()
 
@@ -505,7 +402,6 @@ class ServidorTCP:
         if not exito:
             return Response(ok=False, message=mensaje, request_id=request_id)
 
-        # Obtener datos completos del usuario
         with self._lock:
             usuarios_db = cargar_usuarios()
             if usuario in usuarios_db:
@@ -522,10 +418,6 @@ class ServidorTCP:
         )
 
     def _handle_register(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Registra un nuevo usuario.
-        Payload: {"usuario": "...", "password": "...", "nombre": "...", "apellido": "...", "email": "...", "foto": "..."}
-        """
         usuario = payload.get("usuario", "").strip()
         password = payload.get("password", "").strip()
         nombre = payload.get("nombre", "").strip()
@@ -553,7 +445,6 @@ class ServidorTCP:
                 apellido=apellido,
             )
             
-            # Agregar email y foto
             nuevo_usuario["email"] = email
             nuevo_usuario["foto"] = foto
             
@@ -566,10 +457,6 @@ class ServidorTCP:
         )
 
     def _handle_change_password(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Cambia la contraseña verificando la contraseña actual.
-        Payload: {"usuario": "...", "password_actual": "...", "password_nuevo": "..."}
-        """
         usuario = payload.get("usuario", "").strip()
         password_actual = payload.get("password_actual", "").strip()
         password_nuevo = payload.get("password_nuevo", "").strip()
@@ -587,7 +474,6 @@ class ServidorTCP:
                     ok=False, message="Usuario no existe", request_id=request_id
                 )
 
-            # Verificar password actual
             hash_actual = usuarios_db[usuario].get("password_hash", "")
             if not verify_password(password_actual, hash_actual):
                 return Response(
@@ -605,10 +491,6 @@ class ServidorTCP:
         )
 
     def _handle_change_password_no_validation(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Cambia la contraseña sin verificar la actual (para recuperación por email).
-        Payload: {"usuario": "...", "password_nuevo": "..."}
-        """
         usuario = payload.get("usuario", "").strip()
         password_nuevo = payload.get("password_nuevo", "").strip()
 
@@ -636,10 +518,6 @@ class ServidorTCP:
         )
 
     def _handle_check_user(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Verifica si un usuario está disponible (no existe).
-        Payload: {"usuario": "..."}
-        """
         usuario = payload.get("usuario", "").strip()
 
         if not usuario:
@@ -661,10 +539,6 @@ class ServidorTCP:
             )
 
     def _handle_update_profile(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Actualiza los datos del perfil de un usuario.
-        Payload: {"usuario": "...", "datos": {...}}
-        """
         usuario = payload.get("usuario", "").strip()
         datos = payload.get("datos", {})
 
@@ -681,7 +555,6 @@ class ServidorTCP:
                     ok=False, message="Usuario no existe", request_id=request_id
                 )
 
-            # Actualizar campos permitidos
             for campo in ["nombre", "apellido", "email", "foto"]:
                 if campo in datos:
                     usuarios_db[usuario][campo] = datos[campo]
@@ -694,10 +567,6 @@ class ServidorTCP:
         )
 
     def _handle_get_email(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Obtiene el email de un usuario.
-        Payload: {"usuario": "..."}
-        """
         usuario = payload.get("usuario", "").strip()
 
         if not usuario:
@@ -720,10 +589,6 @@ class ServidorTCP:
         )
 
     def _handle_get_friends_complete(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Obtiene los datos completos de una lista de usuarios.
-        Payload: {"usernames": ["user1", "user2", ...]}
-        """
         usernames = payload.get("usernames", [])
 
         if not isinstance(usernames, list):
@@ -738,7 +603,6 @@ class ServidorTCP:
             for username in usernames:
                 if username in usuarios_db:
                     usuario_data = usuarios_db[username].copy()
-                    # No enviar password_hash
                     usuario_data.pop("password_hash", None)
                     amigos.append(usuario_data)
 
@@ -747,15 +611,8 @@ class ServidorTCP:
         )
 
     def _handle_get_all_users(self, payload: dict, request_id: Optional[str]) -> Response:
-        """
-        Obtiene todos los usuarios (sin passwords).
-        NOTA: Evitar usar en producción, solo para compatibilidad.
-        Payload: {}
-        """
         with self._lock:
             usuarios_db = cargar_usuarios()
-            
-            # Crear copia sin password_hash
             usuarios_sin_pass = {}
             for username, data in usuarios_db.items():
                 user_copy = data.copy()
@@ -766,13 +623,7 @@ class ServidorTCP:
             ok=True, data={"usuarios": usuarios_sin_pass}, request_id=request_id
         )
 
-    # =========================
-    # Utilidades
-    # =========================
     def obtener_info_clientes(self) -> list[dict]:
-        """
-        Devuelve lista de clientes conectados (para GUI).
-        """
         with self._lock:
             return [
                 {

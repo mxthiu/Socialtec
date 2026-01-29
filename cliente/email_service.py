@@ -5,13 +5,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 
-
-# CONFIGURACIÓN DE EMAIL
-
-
 USAR_EMAIL_REAL = True
 
-# Credenciales SMTP
 EMAIL_REMITENTE = "mathiascalvof1@gmail.com"
 PASSWORD_REMITENTE = "pbmatkzgkhxwlswd"
 
@@ -21,15 +16,10 @@ codigos_activos = {}
 
 
 def generar_codigo():
-    """Genera un código de 6 dígitos"""
     return ''.join(random.choices(string.digits, k=6))
 
 
 def enviar_codigo_recuperacion(email_destino, nombre_usuario):
-    """
-    Envía un código de recuperación al email
-    Retorna: (bool, str, str) - (éxito, mensaje, código)
-    """
     codigo = generar_codigo()
     
     codigos_activos[email_destino] = {
@@ -47,19 +37,15 @@ def enviar_codigo_recuperacion(email_destino, nombre_usuario):
         print("="*50 + "\n")
         return True, f"Código enviado a {email_destino}", codigo
     
-    # MODO PRODUCCIÓN: Envía email real por SMTP
     try:
-        # Configuración del servidor SMTP de Gmail
         smtp_server = "smtp.gmail.com"
         smtp_port = 587
         
-        # Crear mensaje
         mensaje = MIMEMultipart()
         mensaje['From'] = EMAIL_REMITENTE
         mensaje['To'] = email_destino
         mensaje['Subject'] = "SocialTec - Código de Recuperación"
         
-        # Cuerpo del email en HTML
         cuerpo = f'''
         <html>
             <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9fafb;">
@@ -83,7 +69,6 @@ def enviar_codigo_recuperacion(email_destino, nombre_usuario):
         
         mensaje.attach(MIMEText(cuerpo, 'html'))
         
-        # Conectar y enviar email
         print(f"Conectando con Gmail para enviar a {email_destino}...")
         servidor = smtplib.SMTP(smtp_server, smtp_port)
         servidor.starttls()
@@ -109,30 +94,23 @@ def enviar_codigo_recuperacion(email_destino, nombre_usuario):
 
 
 def verificar_codigo(email, codigo_ingresado):
-    """
-    Verifica si el código es válido
-    Retorna: (bool, str) - (válido, mensaje)
-    """
     if email not in codigos_activos:
         return False, "No hay código activo para este email"
     
     datos = codigos_activos[email]
     
-    # Verificar si expiró
     if datetime.now() > datos['expira']:
         del codigos_activos[email]
         return False, "El código ha expirado"
     
-    # Verificar código
     if datos['codigo'] == codigo_ingresado:
-        del codigos_activos[email]  # Eliminar código usado
+        del codigos_activos[email]
         return True, "Código válido"
     else:
         return False, "Código incorrecto"
 
 
 def limpiar_codigos_expirados():
-    """Limpia códigos que ya expiraron"""
     ahora = datetime.now()
     emails_expirados = [
         email for email, datos in codigos_activos.items()

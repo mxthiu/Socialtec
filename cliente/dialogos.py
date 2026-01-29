@@ -4,7 +4,6 @@ from cliente.estilos import *
 
 
 class DialogoConfirmacion(QDialog):
-    """Diálogo de confirmación genérico"""
     
     def __init__(self, titulo, mensaje, texto_confirmar="Confirmar", texto_cancelar="Cancelar", parent=None):
         super().__init__(parent)
@@ -17,7 +16,6 @@ class DialogoConfirmacion(QDialog):
         self.aplicar_animacion_entrada()
     
     def inicializar_ui(self):
-        """Configura el diálogo"""
         self.setWindowTitle(self.titulo)
         self.setFixedWidth(400)
         self.setStyleSheet(f"""
@@ -105,7 +103,6 @@ class DialogoConfirmacion(QDialog):
         layout_principal.addLayout(layout_botones)
     
     def aplicar_animacion_entrada(self):
-        """Aplica animación de fade in al diálogo"""
         self.efecto_opacidad = QGraphicsOpacityEffect(self)
         self.setGraphicsEffect(self.efecto_opacidad)
         
@@ -117,31 +114,23 @@ class DialogoConfirmacion(QDialog):
         self.animacion.start()
     
     def confirmar(self):
-        """Usuario confirma la acción"""
         self.resultado = True
         self.accept()
     
     def cancelar(self):
-        """Usuario cancela la acción"""
         self.resultado = False
         self.reject()
     
     @staticmethod
     def mostrar(titulo, mensaje, texto_confirmar="Confirmar", texto_cancelar="Cancelar", parent=None):
-        """
-        Método estático para mostrar el diálogo fácilmente
-        Retorna: True si confirma, False si cancela
-        """
         dialogo = DialogoConfirmacion(titulo, mensaje, texto_confirmar, texto_cancelar, parent)
         dialogo.exec()
         return dialogo.resultado
 
 
 class DialogoConfirmacionPeligrosa(DialogoConfirmacion):
-    """Diálogo de confirmación para acciones peligrosas (eliminar, etc)"""
     
     def inicializar_ui(self):
-        """Configura el diálogo con estilo de advertencia"""
         super().inicializar_ui()
         
         layout = self.layout()
@@ -165,7 +154,6 @@ class DialogoConfirmacionPeligrosa(DialogoConfirmacion):
 
 
 def confirmar_eliminar_amigo(nombre_amigo, parent=None):
-    """Confirma eliminación de un amigo"""
     return DialogoConfirmacionPeligrosa.mostrar(
         "Eliminar Amigo",
         f"¿Estás seguro de que deseas eliminar a {nombre_amigo} de tus amigos?\n\nEsta acción no se puede deshacer.",
@@ -176,7 +164,6 @@ def confirmar_eliminar_amigo(nombre_amigo, parent=None):
 
 
 def confirmar_cerrar_sesion(parent=None):
-    """Confirma cerrar sesión"""
     return DialogoConfirmacion.mostrar(
         "Cerrar Sesión",
         "¿Estás seguro de que deseas cerrar sesión?",
@@ -187,7 +174,6 @@ def confirmar_cerrar_sesion(parent=None):
 
 
 def confirmar_cambio_password(parent=None):
-    """Confirma cambio de contraseña"""
     return DialogoConfirmacion.mostrar(
         "Cambiar Contraseña",
         "¿Deseas continuar con el cambio de contraseña?\n\nSe enviará un código a tu correo.",

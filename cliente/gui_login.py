@@ -16,18 +16,14 @@ class VentanaLogin(QMainWindow):
         self.inicializar_ui()
     
     def inicializar_ui(self):
-        """Configura la interfaz de usuario"""
-        # Configuración de la ventana
         self.setWindowTitle("SocialTec - Iniciar Sesión")
         self.resize(420, 620)
         self.setMinimumSize(360, 540)
         self.setStyleSheet(ESTILO_VENTANA)
         
-        # Widget central
         widget_central = QWidget()
         self.setCentralWidget(widget_central)
         
-        # Layout principal
         layout_principal = QVBoxLayout()
         layout_principal.setContentsMargins(40, 40, 40, 40)
         layout_principal.setSpacing(20)
@@ -71,12 +67,9 @@ class VentanaLogin(QMainWindow):
         layout_registro.addWidget(self.btn_ir_registro)
         layout_principal.addLayout(layout_registro)
         
-        # Espaciador al final
         layout_principal.addStretch()
     
     def crear_header(self, layout):
-        """Crea el encabezado con título y subtítulo"""
-        # Título
         titulo = QLabel("SocialTec")
         titulo.setStyleSheet(ESTILO_TITULO)
         titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -88,19 +81,15 @@ class VentanaLogin(QMainWindow):
         subtitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(subtitulo)
         
-        # Espaciador
         layout.addSpacing(20)
     
     def crear_formulario(self, layout):
-        """Crea el formulario con los campos de entrada"""
-        # Frame contenedor
         frame = QFrame()
         frame.setStyleSheet(ESTILO_FRAME)
         layout_form = QVBoxLayout()
         layout_form.setSpacing(15)
         frame.setLayout(layout_form)
         
-        # Campo de usuario
         label_usuario = QLabel("Usuario")
         label_usuario.setStyleSheet(ESTILO_LABEL)
         
@@ -112,10 +101,8 @@ class VentanaLogin(QMainWindow):
         layout_form.addWidget(label_usuario)
         layout_form.addWidget(self.input_usuario)
         
-        # Espacio entre campos
         layout_form.addSpacing(10)
         
-        # Campo de contraseña
         label_password = QLabel("Contraseña")
         label_password.setStyleSheet(ESTILO_LABEL)
         
@@ -124,7 +111,7 @@ class VentanaLogin(QMainWindow):
         self.input_password.setEchoMode(QLineEdit.EchoMode.Password)
         self.input_password.setStyleSheet(ESTILO_INPUT)
         self.input_password.setMinimumHeight(45)
-        self.input_password.returnPressed.connect(self.iniciar_sesion)  # Enter para login
+        self.input_password.returnPressed.connect(self.iniciar_sesion)
         
         layout_form.addWidget(label_password)
         layout_form.addWidget(self.input_password)
@@ -132,11 +119,9 @@ class VentanaLogin(QMainWindow):
         layout.addWidget(frame)
     
     def iniciar_sesion(self):
-        """Maneja el evento de inicio de sesión"""
         usuario = self.input_usuario.text().strip()
         password = self.input_password.text()
         
-        # Validación básica
         if not usuario or not password:
             self.mostrar_mensaje("Por favor completa todos los campos", tipo="error")
             return
@@ -164,7 +149,6 @@ class VentanaLogin(QMainWindow):
             self.mostrar_mensaje("Usuario o contraseña incorrectos", tipo="error")
     
     def login_exitoso(self):
-        """Callback cuando el login es exitoso"""
         self.mostrar_mensaje("¡Login exitoso!", tipo="exito")
         from cliente.gui_main_menu import VentanaMainMenu
         self.ventana_main = VentanaMainMenu(self.datos_usuario)
@@ -172,7 +156,6 @@ class VentanaLogin(QMainWindow):
         self.close()
     
     def mostrar_mensaje(self, texto, tipo="error"):
-        """Muestra un mensaje de error o éxito"""
         self.label_mensaje.setText(texto)
         
         if tipo == "error":
@@ -182,18 +165,15 @@ class VentanaLogin(QMainWindow):
         
         self.label_mensaje.setVisible(True)
         
-        # Ocultar mensaje después de 4 segundos
         QTimer.singleShot(4000, lambda: self.label_mensaje.setVisible(False))
     
     def ir_a_registro(self):
-        """Abre la ventana de registro"""
         from cliente.gui_registro import VentanaRegistro
         self.ventana_registro = VentanaRegistro()
         self.ventana_registro.show()
         self.close()
     
     def recuperar_password(self):
-        """Abre la ventana de recuperación de contraseña"""
         from cliente.gui_recuperar_password import VentanaRecuperarPassword
         self.ventana_recuperar = VentanaRecuperarPassword()
         self.ventana_recuperar.show()
@@ -202,7 +182,6 @@ class VentanaLogin(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    # Configurar fuente global
     fuente = QFont("Segoe UI", 10)
     app.setFont(fuente)
     
