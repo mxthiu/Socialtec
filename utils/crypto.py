@@ -70,9 +70,11 @@ def load_key_from_env() -> Optional[bytes]:
 
 def generate_dev_key() -> bytes:
     """
-    Genera una clave aleatoria (solo dev). NO versionar claves reales.
+    Devuelve una clave fija para desarrollo (misma clave en cliente y servidor).
+    IMPORTANTE: En producción usar SOCIALTEC_SECRET_KEY con clave aleatoria.
     """
-    return os.urandom(REQUIRED_KEY_LEN)
+    # Clave fija de 32 bytes para desarrollo (permite cliente-servidor compartir clave)
+    return b'SocialTec2026DevKey1234567890123'  # Exactamente 32 bytes
 
 
 @dataclass(frozen=True)

@@ -1,13 +1,16 @@
 """
-Protocolo de mensajes TCP con framing length-prefix.
+Protocolo de mensajes TCP con framing length-prefix y encriptación AES-GCM.
 
 Define cómo se envían/reciben mensajes JSON entre cliente y servidor.
 Framing: 4 bytes (big-endian) con el tamaño + payload JSON en UTF-8.
 
+SEGURIDAD: Los payloads sensibles (usuario/password) se encriptan con AES-GCM
+antes de transmitirse.
+
 Uso:
-    # Enviar mensaje
+    # Enviar mensaje con credenciales encriptadas
     msg = Message(type="LOGIN", payload={"usuario": "john", "password": "secret"})
-    send_message(sock, msg)
+    send_message_encrypted(sock, msg)
 
     # Recibir respuesta
     resp = recv_response(sock)
@@ -187,3 +190,54 @@ class MsgType:
     REMOVE_FRIEND = "REMOVE_FRIEND"
     GET_STATS = "GET_STATS"
     GET_PATH = "GET_PATH"
+
+
+# =========================
+# Encriptación de mensajes sensibles
+# =========================
+def send_message_encrypted(sock: socket.socket, msg: Message) -> None:
+    """
+    Envía un mensaje encriptando el payload con AES-GCM.
+    El tipo de mensaje NO se encripta (va en claro para routing).
+    """
+    from utils.crypto import get_crypto_box
+    
+    box = get_crypto_box()
+    
+    # Encriptar el payload
+    encrypted_payload = box.encrypt_dict(msg.payload)
+    
+    # Crear mensaje con payload encriptado
+    encrypted_msg = Message(
+        type=msg.type,
+        payload={"encrypted": True, "data": encrypted_payload},
+        request_id=msg.request_id
+    )
+    
+    send_message(sock, encrypted_msg)
+
+
+def recv_message_encrypted(sock: socket.socket) -> Message:
+    """
+    Recibe un mensaje y desencripta el payload si está marcado como encrypted.
+    """
+    from utils.crypto import get_crypto_box
+    
+    msg = recv_message(sock)
+    
+    # Verificar si el payload está encriptado
+    if msg.payload.get("encrypted"):
+        box = get_crypto_box()
+        encrypted_data = msg.payload.get("data", {})
+        
+        # Desencriptar payload
+        decrypted_payload = box.decrypt_dict(encrypted_data)
+        
+        # Retornar mensaje con payload desencriptado
+        return Message(
+            type=msg.type,
+            payload=decrypted_payload,
+            request_id=msg.request_id
+        )
+    
+    return msg

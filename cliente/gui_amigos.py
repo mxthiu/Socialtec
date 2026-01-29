@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QScrollArea
 )
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap, QPainter, QPainterPath
 
 from cliente.estilos import *
@@ -119,7 +119,14 @@ class ContenidoAmigos(QWidget):
         self.usuario_data = usuario_data
         self.parent_window = parent
         self.widgets_amigos = []
+        
+        # Timer para actualizar lista cada 5 segundos
+        self.timer_actualizacion = QTimer()
+        self.timer_actualizacion.timeout.connect(self.actualizar_datos)
+        self.timer_actualizacion.setInterval(5000)  # 5 segundos
+        
         self.inicializar_ui()
+        self.timer_actualizacion.start()
     
     def inicializar_ui(self):
         """Configura la interfaz"""
@@ -330,5 +337,15 @@ class ContenidoAmigos(QWidget):
             pass
 
         self.actualizar_lista_amigos()
+    
+    def hideEvent(self, event):
+        """Detener timer cuando se oculta la pantalla"""
+        self.timer_actualizacion.stop()
+        super().hideEvent(event)
+    
+    def showEvent(self, event):
+        """Reiniciar timer cuando se muestra la pantalla"""
+        self.timer_actualizacion.start()
+        super().showEvent(event)
 
 

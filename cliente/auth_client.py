@@ -16,7 +16,7 @@ import socket
 import logging
 from typing import Tuple, Dict, Optional, Any
 
-from utils.protocolo import Message, Response, MsgType, send_message, recv_response
+from utils.protocolo import Message, Response, MsgType, send_message, recv_response, send_message_encrypted
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -205,6 +205,7 @@ def _enviar_solicitud_tcp(mensaje: Message) -> Response:
     SEGURIDAD:
     - Crea conexión TCP al servidor
     - Usa protocolo de framing length-prefix para mensajes
+    - Encripta payloads sensibles (LOGIN, REGISTER) con AES-GCM
     - Manejo seguro de excepciones de conexión
 
     Args:
@@ -226,9 +227,13 @@ def _enviar_solicitud_tcp(mensaje: Message) -> Response:
         sock.connect((SERVER_HOST, SERVER_PORT))
         logger.debug(f"Conectado a servidor {SERVER_HOST}:{SERVER_PORT}")
 
-        # Enviar mensaje
-        send_message(sock, mensaje)
-        logger.debug(f"Mensaje enviado: {mensaje.type}")
+        # Enviar mensaje - usar encriptación para LOGIN y REGISTER
+        if mensaje.type in [MsgType.LOGIN, MsgType.REGISTER]:
+            send_message_encrypted(sock, mensaje)
+            logger.debug(f"Mensaje encriptado enviado: {mensaje.type}")
+        else:
+            send_message(sock, mensaje)
+            logger.debug(f"Mensaje enviado: {mensaje.type}")
 
         # Recibir respuesta
         respuesta = recv_response(sock)

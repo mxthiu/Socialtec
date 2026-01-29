@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap, QPainter, QPainterPath
 
 from cliente.estilos import COLORES
@@ -13,7 +13,14 @@ class ContenidoPerfilPublico(QWidget):
         self.usuario_actual = usuario_actual
         self.perfil_objetivo = perfil_objetivo
         self.parent_window = parent_window
+        
+        # Timer para actualizar estado cada 3 segundos
+        self.timer_actualizacion = QTimer()
+        self.timer_actualizacion.timeout.connect(self.actualizar_estado_en_tiempo_real)
+        self.timer_actualizacion.setInterval(3000)  # 3 segundos
+        
         self.inicializar_ui()
+        self.timer_actualizacion.start()
 
     def inicializar_ui(self):
         layout = QVBoxLayout()
@@ -245,7 +252,27 @@ class ContenidoPerfilPublico(QWidget):
     def notificar_cambio(self):
         if hasattr(self.parent_window, "actualizar_datos_usuario"):
             self.parent_window.actualizar_datos_usuario()
+    
+    def actualizar_estado_en_tiempo_real(self):
+        """Actualiza el estado de amistad automáticamente cada 3 segundos"""
+        try:
+            from cliente.auth_client import obtener_usuario_completo
+            
+            # Actualizar datos del usuario actual
+            usuario_actual_username = self.usuario_actual.get("usuario")
+            datos_actualizados = obtener_usuario_completo(usuario_actual_username)
+            
+            if datos_actualizados:
+                # Actualizar lista de amigos del usuario actual
+                self.usuario_actual["amigos"] = datos_actualizados.get("amigos", [])
+                
+                # Refrescar el estado del botón
+                self.refrescar_estado_amistad()
+        except Exception as e:
+            # Silenciar errores para no interrumpir la experiencia
+            pass
 
     def volver_atras(self):
+        self.timer_actualizacion.stop()  # Detener timer al salir
         self.parent_window.volver_atras()
 

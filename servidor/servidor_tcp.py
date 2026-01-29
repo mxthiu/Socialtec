@@ -34,6 +34,7 @@ from utils.protocolo import (
     Message,
     Response,
     recv_message,
+    recv_message_encrypted,
     send_response,
     MsgType,
 )
@@ -216,14 +217,15 @@ class ServidorTCP:
     ) -> None:
         """
         Atiende las peticiones de un cliente hasta que se desconecta.
+        Desencripta automáticamente mensajes LOGIN y REGISTER.
         """
         try:
             while self._activo:
                 try:
-                    # Recibir mensaje
-                    msg = recv_message(conn)
+                    # Recibir mensaje - desencriptar si es necesario
+                    msg = recv_message_encrypted(conn)
                     self._log(
-                        f"[RECV] Cliente #{cliente_id}: {msg.type} | payload={msg.payload}"
+                        f"[RECV] Cliente #{cliente_id}: {msg.type}"
                     )
 
                     # Despachar segun tipo
