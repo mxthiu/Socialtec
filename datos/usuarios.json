@@ -8,7 +8,8 @@
     "foto": "",
     "amigos": [
       "est_user_2",
-      "sara"
+      "sara",
+      "mathi"
     ]
   },
   "est_user_2": {
@@ -20,7 +21,8 @@
     "foto": "",
     "amigos": [
       "est_user_1",
-      "sara"
+      "sara",
+      "mathi"
     ]
   },
   "mathi": {
@@ -31,6 +33,8 @@
     "email": "praraora@gmail.com",
     "foto": "C:/Users/Administrator/Pictures/Wallpaper 2.jpg",
     "amigos": [
+      "est_user_1",
+      "est_user_2",
       "sara"
     ]
   },
@@ -42,9 +46,9 @@
     "email": "mathiascalvof1@gmail.com",
     "foto": "C:/Users/Administrator/Pictures/Wallpaper 1.jpg",
     "amigos": [
-      "mathi",
       "est_user_1",
-      "est_user_2"
+      "est_user_2",
+      "mathi"
     ]
   }
 }

@@ -1,15 +1,19 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QFrame, QLabel, QTextEdit, QStatusBar, QApplication
+    QPushButton, QFrame, QLabel, QTextEdit, QStatusBar, QApplication,
+    QTabWidget, QScrollArea
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
+from PyQt6.QtGui import QFont, QPixmap
 import sys
 import threading
+import time
+from pathlib import Path
 
 from cliente.estilos import *
 from servidor.servidor_tcp import ServidorTCP
 from grafo.grafo import Grafo
+from grafo.visualizacion import visualizar_grafo
 
 
 class ServidorThread(QThread):
@@ -38,8 +42,8 @@ class VentanaServidor(QMainWindow):
     def inicializar_ui(self):
         """Configura la interfaz del servidor"""
         self.setWindowTitle("Servidor SocialTec")
-        self.resize(900, 700)
-        self.setMinimumSize(800, 600)
+        self.resize(1100, 800)
+        self.setMinimumSize(1000, 700)
         self.setStyleSheet(ESTILO_VENTANA)
         
         # Widget central
@@ -85,38 +89,39 @@ class VentanaServidor(QMainWindow):
         self.boton_apagar.setEnabled(False)
         layout_controles.addWidget(self.boton_apagar)
         
-        # Botón cargar grafo
-        self.boton_cargar_grafo = QPushButton("Cargar Grafo")
-        self.boton_cargar_grafo.setStyleSheet(ESTILO_BOTON_PRIMARIO)
-        self.boton_cargar_grafo.clicked.connect(self.cargar_grafo)
-        self.boton_cargar_grafo.setEnabled(False)
-        layout_controles.addWidget(self.boton_cargar_grafo)
+        # Botón actualizar visualización
+        self.boton_actualizar_grafo = QPushButton("Actualizar Visualización")
+        self.boton_actualizar_grafo.setStyleSheet(ESTILO_BOTON_PRIMARIO)
+        self.boton_actualizar_grafo.clicked.connect(self.actualizar_visualizacion_grafo)
+        self.boton_actualizar_grafo.setEnabled(False)
+        layout_controles.addWidget(self.boton_actualizar_grafo)
         
         layout_principal.addLayout(layout_controles)
         
-        # Área del grafo
-        label_grafo = QLabel("Visualización del Grafo")
-        label_grafo.setStyleSheet(ESTILO_LABEL)
-        label_grafo.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        layout_principal.addWidget(label_grafo)
-        
-        frame_grafo = QFrame()
-        frame_grafo.setStyleSheet(f"""
-            QFrame {{
-                background-color: {COLORES['superficie_clara']};
-                border: 2px solid {COLORES['borde']};
-                border-radius: 10px;
+        # Crear TabWidget
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet(f"""
+            QTabWidget {{
+                background-color: {COLORES['fondo']};
+            }}
+            QTabBar::tab {{
+                background-color: {COLORES['superficie']};
+                color: {COLORES['texto']};
+                padding: 10px 20px;
+                border-bottom: 2px solid {COLORES['borde']};
+            }}
+            QTabBar::tab:selected {{
+                background-color: {COLORES['primario']};
+                color: white;
+                border-bottom: 2px solid {COLORES['primario']};
             }}
         """)
-        frame_grafo.setMinimumHeight(400)
-        layout_frame_grafo = QVBoxLayout()
-        layout_frame_grafo.setContentsMargins(0, 0, 0, 0)
-        frame_grafo.setLayout(layout_frame_grafo)
+        layout_principal.addWidget(self.tab_widget)
         
-        # Área de logs del servidor
-        self.area_grafo = QTextEdit()
-        self.area_grafo.setReadOnly(True)
-        self.area_grafo.setStyleSheet(f"""
+        # Pestaña de Logs
+        self.area_logs = QTextEdit()
+        self.area_logs.setReadOnly(True)
+        self.area_logs.setStyleSheet(f"""
             QTextEdit {{
                 background-color: {COLORES['superficie_clara']};
                 color: {COLORES['texto']};
@@ -126,14 +131,31 @@ class VentanaServidor(QMainWindow):
                 font-size: 12px;
                 font-family: 'Courier New';
             }}
-            QTextEdit:focus {{
-                border: 2px solid {COLORES['primario']};
+        """)
+        self.area_logs.setText("Servidor apagado - Presiona 'Prender Server' para iniciar\n")
+        self.tab_widget.addTab(self.area_logs, "📋 Logs")
+        
+        # Pestaña de Visualización del Grafo
+        self.scroll_grafo = QScrollArea()
+        self.scroll_grafo.setWidgetResizable(True)
+        self.scroll_grafo.setStyleSheet(f"""
+            QScrollArea {{
+                background-color: {COLORES['fondo']};
+                border: none;
             }}
         """)
-        self.area_grafo.setText("Servidor apagado - Presiona 'Prender Server' para iniciar\n")
-        layout_frame_grafo.addWidget(self.area_grafo)
         
-        layout_principal.addWidget(frame_grafo)
+        self.label_imagen_grafo = QLabel()
+        self.label_imagen_grafo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_imagen_grafo.setStyleSheet(f"""
+            QLabel {{
+                background-color: {COLORES['fondo']};
+                padding: 20px;
+            }}
+        """)
+        self.label_imagen_grafo.setText("Grafo vacío - No hay usuarios registrados aún")
+        self.scroll_grafo.setWidget(self.label_imagen_grafo)
+        self.tab_widget.addTab(self.scroll_grafo, "🌐 Visualización Grafo")
         
         # Status bar
         self.status_bar = self.statusBar()
@@ -147,6 +169,11 @@ class VentanaServidor(QMainWindow):
         self.estado_label = QLabel("Estado: Servidor apagado")
         self.estado_label.setStyleSheet(ESTILO_LABEL)
         self.status_bar.addWidget(self.estado_label)
+        
+        # Timer para actualizar visualización cada 5 segundos
+        self.timer_actualizacion = QTimer()
+        self.timer_actualizacion.timeout.connect(self.actualizar_visualizacion_grafo_auto)
+        self.timer_actualizacion.setInterval(5000)  # 5 segundos
     
     def prender_servidor(self):
         """Enciende el servidor TCP"""
@@ -169,8 +196,9 @@ class VentanaServidor(QMainWindow):
             self.servidor_activo = True
             self.boton_prender.setEnabled(False)
             self.boton_apagar.setEnabled(True)
-            self.boton_cargar_grafo.setEnabled(True)
+            self.boton_actualizar_grafo.setEnabled(True)
             self.estado_label.setText(f"Estado: Servidor activo (puerto {self.puerto})")
+            self.timer_actualizacion.start()
             self.log(f"✓ Servidor iniciado en puerto {self.puerto}")
         except Exception as e:
             self.log(f"✗ Error al iniciar servidor: {e}")
@@ -184,26 +212,84 @@ class VentanaServidor(QMainWindow):
             if self.servidor_tcp:
                 self.servidor_tcp.detener()
             
+            self.timer_actualizacion.stop()
             self.servidor_activo = False
             self.boton_prender.setEnabled(True)
             self.boton_apagar.setEnabled(False)
-            self.boton_cargar_grafo.setEnabled(False)
+            self.boton_actualizar_grafo.setEnabled(False)
             self.estado_label.setText("Estado: Servidor apagado")
             self.log("✓ Servidor detenido")
         except Exception as e:
             self.log(f"✗ Error al detener servidor: {e}")
     
-    def cargar_grafo(self):
-        """Carga y visualiza el grafo"""
-        self.log("Grafo cargado (esqueleto)")
+    def actualizar_visualizacion_grafo(self):
+        """Actualiza la visualización del grafo manualmente"""
+        self.actualizar_visualizacion_grafo_auto()
+    
+    def actualizar_visualizacion_grafo_auto(self):
+        """Genera y actualiza la visualización del grafo"""
+        try:
+            # Cargar usuarios desde persistencia
+            from servidor.persistencia import cargar_usuarios
+            usuarios = cargar_usuarios()
+            
+            if not usuarios:
+                self.label_imagen_grafo.setText("📊 Grafo vacío - No hay usuarios registrados aún")
+                return
+            
+            # Limpiar el grafo
+            self.grafo._adj.clear()
+            self.grafo._users.clear()
+            
+            # Agregar usuarios (nodos)
+            for username, datos in usuarios.items():
+                self.grafo.agregar_usuario(
+                    username,
+                    nombre=datos.get("nombre", ""),
+                    apellido=datos.get("apellido", ""),
+                    foto=datos.get("foto", "")
+                )
+            
+            # Agregar amistades (aristas)
+            for usuario, datos in usuarios.items():
+                amigos = datos.get("amigos", [])
+                for amigo in amigos:
+                    if amigo in usuarios and self.grafo.existe_usuario(amigo):
+                        try:
+                            self.grafo.agregar_amistad(usuario, amigo)
+                        except:
+                            pass  # Evitar errores si ya existe la amistad
+            
+            # Generar visualización
+            ruta_temp = Path("datos/grafo_temp.png")
+            ruta_temp.parent.mkdir(parents=True, exist_ok=True)
+            
+            visualizar_grafo(
+                self.grafo,
+                ruta_salida=str(ruta_temp),
+                titulo=f"Red Social SocialTec ({len(usuarios)} usuarios)",
+                mostrar_etiquetas=True
+            )
+            
+            # Mostrar la imagen
+            if ruta_temp.exists():
+                pixmap = QPixmap(str(ruta_temp))
+                # Escalar a un tamaño razonable
+                pixmap = pixmap.scaledToWidth(900, Qt.TransformationMode.SmoothTransformation)
+                self.label_imagen_grafo.setPixmap(pixmap)
+                self.log(f"✓ Visualización actualizada ({len(usuarios)} usuarios)")
+            
+        except Exception as e:
+            self.label_imagen_grafo.setText(f"❌ Error al generar visualización: {str(e)}")
+            self.log(f"✗ Error al actualizar grafo: {e}")
     
     def log(self, mensaje: str):
         """Agrega mensaje al área de logs"""
-        texto_actual = self.area_grafo.toPlainText()
-        self.area_grafo.setText(texto_actual + mensaje + "\n")
+        texto_actual = self.area_logs.toPlainText()
+        self.area_logs.setText(texto_actual + mensaje + "\n")
         
         # Scroll al final
-        scrollbar = self.area_grafo.verticalScrollBar()
+        scrollbar = self.area_logs.verticalScrollBar()
         scrollbar.setValue(scrollbar.maximum())
 
 

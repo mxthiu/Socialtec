@@ -208,7 +208,18 @@ class ContenidoAmigos(QWidget):
         self.widgets_amigos.clear()
         
         from cliente.algoritmos import merge_sort_amigos
-        amigos_ordenados = merge_sort_amigos(self.usuario_data['amigos'])
+        from cliente.auth_client import obtener_amigos_completos
+        
+        # Obtener datos completos de amigos (no solo nombres de usuario)
+        amigos_lista = self.usuario_data.get('amigos', [])
+        if amigos_lista and isinstance(amigos_lista[0], str):
+            # Si son strings (nombres de usuario), obtener datos completos
+            amigos_completos = obtener_amigos_completos(amigos_lista)
+        else:
+            # Si ya son diccionarios, usarlos directamente
+            amigos_completos = amigos_lista
+        
+        amigos_ordenados = merge_sort_amigos(amigos_completos)
 
         self.label_titulo.setText(f"Mis Amigos ({len(amigos_ordenados)})")
         

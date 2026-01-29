@@ -129,7 +129,7 @@ def visualizar_grafo(
                 G, pos,
                 font_size=10,
                 font_weight='bold',
-                font_color='white'
+                font_color='black'
             )
         
         # Guardar imagen
