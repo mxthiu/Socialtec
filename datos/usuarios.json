@@ -7,9 +7,7 @@
     "email": "est1@test.com",
     "foto": "",
     "amigos": [
-      "est_user_2",
-      "sara",
-      "mathi"
+      "est_user_2"
     ]
   },
   "est_user_2": {
@@ -21,7 +19,6 @@
     "foto": "",
     "amigos": [
       "est_user_1",
-      "sara",
       "mathi"
     ]
   },
@@ -33,9 +30,9 @@
     "email": "praraora@gmail.com",
     "foto": "C:/Users/Administrator/Pictures/Wallpaper 2.jpg",
     "amigos": [
-      "est_user_1",
       "est_user_2",
-      "sara"
+      "sara",
+      "sofi"
     ]
   },
   "sara": {
@@ -46,9 +43,27 @@
     "email": "mathiascalvof1@gmail.com",
     "foto": "C:/Users/Administrator/Pictures/Wallpaper 1.jpg",
     "amigos": [
-      "est_user_1",
-      "est_user_2",
       "mathi"
     ]
+  },
+  "sofi": {
+    "usuario": "sofi",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$/X+PkZKSshaC0Nq7lxJCKA$T1WND04ip2JJUeoysd4cUMzsqD2LM08FRnXjzuKrZIY",
+    "nombre": "sofi",
+    "apellido": "castillo",
+    "email": "panate3912@gxuzi.com",
+    "foto": "C:/Users/Administrator/Pictures/Wallpaper 6.jpg",
+    "amigos": [
+      "mathi"
+    ]
+  },
+  "test_cambio_pwd": {
+    "usuario": "test_cambio_pwd",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$QYiRsnaulbI2pvTeG4MQAg$hwb2pipu7jiXedlyOR7JE5XAhhyp9uxwjuy/7IssU7g",
+    "nombre": "Test",
+    "apellido": "Usuario",
+    "email": "test@example.com",
+    "foto": "",
+    "amigos": []
   }
 }

@@ -94,7 +94,7 @@ class ServidorTCP:
         self.grafo = grafo
         self.host = host
         self.port = port
-        self.on_log = on_log or (lambda msg: print(f"[SERVER] {msg}"))
+        self.on_log = on_log or (lambda msg: None)
 
         self._socket: Optional[socket.socket] = None
         self._activo = False

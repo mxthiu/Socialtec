@@ -64,7 +64,7 @@ def enviar_codigo_recuperacion(email_destino, nombre_usuario):
         <html>
             <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9fafb;">
                 <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <h2 style="color: #2563EB; margin-top: 0;">🔐 SocialTec - Recuperación de Contraseña</h2>
+                    <h2 style="color: #2563EB; margin-top: 0;"> SocialTec - Recuperación de Contraseña</h2>
                     <p style="font-size: 16px; color: #374151;">Hola <strong>{nombre_usuario}</strong>,</p>
                     <p style="font-size: 16px; color: #374151;">Has solicitado cambiar tu contraseña. Usa el siguiente código de verificación:</p>
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 12px; text-align: center; margin: 25px 0;">

@@ -112,15 +112,10 @@ class ContenidoEstadisticas(QWidget):
         
         # Validar que stats no sea None
         if stats is None:
-            print("⚠️ ERROR: stats es None")
             return
-        
-        # Debug: mostrar estructura
-        print(f"DEBUG: stats = {stats}")
         
         # Validar keys requeridas
         if "total_usuarios" not in stats:
-            print(f"⚠️ ERROR: Falta 'total_usuarios' en stats. Keys disponibles: {list(stats.keys())}")
             return
         
         # Mostrar estadísticas principales

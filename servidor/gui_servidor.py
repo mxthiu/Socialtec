@@ -14,7 +14,7 @@ from cliente.estilos import *
 from servidor.servidor_tcp import ServidorTCP
 from grafo.grafo import Grafo
 from grafo.visualizacion import visualizar_grafo
-from grafo.algoritmos import encontrar_camino_bfs
+from grafo.algoritmos import encontrar_camino_bfs, calcular_estadisticas
 
 
 class ServidorThread(QThread):
@@ -156,10 +156,13 @@ class VentanaServidor(QMainWindow):
         """)
         self.label_imagen_grafo.setText("Grafo vacío - No hay usuarios registrados aún")
         self.scroll_grafo.setWidget(self.label_imagen_grafo)
-        self.tab_widget.addTab(self.scroll_grafo, " Visualización Grafo")
+        self.tab_widget.addTab(self.scroll_grafo, "Visualización Grafo")
         
         # Pestaña de búsqueda de caminos
         self._crear_tab_buscar_camino()
+        
+        # Pestaña de estadísticas
+        self._crear_tab_estadisticas()
         
         # Status bar
         self.status_bar = self.statusBar()
@@ -238,7 +241,7 @@ class VentanaServidor(QMainWindow):
             usuarios = cargar_usuarios()
             
             if not usuarios:
-                self.label_imagen_grafo.setText("📊 Grafo vacío - No hay usuarios registrados aún")
+                self.label_imagen_grafo.setText("Grafo vacío - No hay usuarios registrados aún")
                 return
             
             # Limpiar el grafo
@@ -284,7 +287,7 @@ class VentanaServidor(QMainWindow):
                 self.log(f"✓ Visualización actualizada ({len(usuarios)} usuarios)")
             
         except Exception as e:
-            self.label_imagen_grafo.setText(f"❌ Error al generar visualización: {str(e)}")
+            self.label_imagen_grafo.setText(f"Error al generar visualización: {str(e)}")
             self.log(f"✗ Error al actualizar grafo: {e}")
     
     def log(self, mensaje: str):
@@ -366,7 +369,7 @@ class VentanaServidor(QMainWindow):
         layout_entrada.addWidget(self.input_usuario_fin)
         
         # Botón buscar
-        self.boton_buscar_camino = QPushButton("🔍 Buscar")
+        self.boton_buscar_camino = QPushButton("Buscar")
         self.boton_buscar_camino.setStyleSheet(ESTILO_BOTON_PRIMARIO)
         self.boton_buscar_camino.clicked.connect(self.buscar_camino)
         self.boton_buscar_camino.setFixedWidth(100)
@@ -394,7 +397,7 @@ class VentanaServidor(QMainWindow):
         layout_camino.addWidget(self.area_resultado_camino)
         
         widget_camino.setLayout(layout_camino)
-        self.tab_widget.addTab(widget_camino, " Buscar Camino")
+        self.tab_widget.addTab(widget_camino, "Buscar Camino")
     
     def buscar_camino(self):
         """Busca un camino entre dos usuarios"""
@@ -402,11 +405,11 @@ class VentanaServidor(QMainWindow):
         fin = self.input_usuario_fin.text().strip()
         
         if not inicio or not fin:
-            self.area_resultado_camino.setText("❌ ERROR: Debes ingresar ambos usuarios")
+            self.area_resultado_camino.setText("ERROR: Debes ingresar ambos usuarios")
             return
         
         if inicio == fin:
-            self.area_resultado_camino.setText(f"⚠️ ADVERTENCIA: Los usuarios son los mismos ({inicio})")
+            self.area_resultado_camino.setText(f"ADVERTENCIA: Los usuarios son los mismos ({inicio})")
             return
         
         try:
@@ -416,7 +419,7 @@ class VentanaServidor(QMainWindow):
             if camino:
                 # Camino encontrado
                 saltos = len(camino) - 1
-                resultado = f"""✅ CAMINO ENCONTRADO
+                resultado = f"""CAMINO ENCONTRADO
 
 Desde: {inicio}
 Hasta: {fin}
@@ -434,10 +437,10 @@ Detalle del camino:
                         resultado += f"\n  {i}. {usuario} (amigo intermedio)"
                 
                 self.area_resultado_camino.setText(resultado)
-                self.log(f"✅ Camino encontrado: {inicio} → {fin} ({saltos} saltos)")
+                self.log(f"Camino encontrado: {inicio} -> {fin} ({saltos} saltos)")
             else:
                 # No existe camino
-                resultado = f"""❌ NO EXISTE CAMINO
+                resultado = f"""NO EXISTE CAMINO
 
 Desde: {inicio}
 Hasta: {fin}
@@ -446,11 +449,104 @@ No se encontró un camino de amistad entre estos usuarios.
 Esto significa que no están conectados a través de amigos comunes.
 """
                 self.area_resultado_camino.setText(resultado)
-                self.log(f"❌ No existe camino entre {inicio} y {fin}")
+                self.log(f"No existe camino entre {inicio} y {fin}")
         
         except Exception as e:
-            self.area_resultado_camino.setText(f"⚠️ ERROR: {str(e)}")
-            self.log(f"❌ Error al buscar camino: {str(e)}")
+            self.area_resultado_camino.setText(f"ERROR: {str(e)}")
+            self.log(f"Error al buscar camino: {str(e)}")
+    
+    def _crear_tab_estadisticas(self):
+        """Crea la pestaña para mostrar estadísticas del grafo"""
+        widget_stats = QWidget()
+        layout_stats = QVBoxLayout()
+        layout_stats.setContentsMargins(20, 20, 20, 20)
+        layout_stats.setSpacing(15)
+        
+        # Título
+        titulo_stats = QLabel("Estadísticas del Grafo")
+        titulo_stats.setStyleSheet(f"""
+            font-size: 16px;
+            font-weight: bold;
+            color: {COLORES['texto']};
+        """)
+        layout_stats.addWidget(titulo_stats)
+        
+        # Descripción
+        desc = QLabel("Estadísticas globales de la red social")
+        desc.setStyleSheet(f"color: {COLORES['texto_secundario']}; font-size: 12px;")
+        layout_stats.addWidget(desc)
+        
+        # Separador
+        sep = QFrame()
+        sep.setFixedHeight(1)
+        sep.setStyleSheet(f"background-color: {COLORES['borde']};")
+        layout_stats.addWidget(sep)
+        
+        # Botón actualizar estadísticas
+        layout_botones = QHBoxLayout()
+        layout_botones.setSpacing(10)
+        
+        self.boton_actualizar_stats = QPushButton("Actualizar Estadísticas")
+        self.boton_actualizar_stats.setStyleSheet(ESTILO_BOTON_PRIMARIO)
+        self.boton_actualizar_stats.clicked.connect(self.actualizar_estadisticas)
+        layout_botones.addWidget(self.boton_actualizar_stats)
+        
+        layout_botones.addStretch()
+        layout_stats.addLayout(layout_botones)
+        
+        # Área de estadísticas
+        self.area_estadisticas = QTextEdit()
+        self.area_estadisticas.setReadOnly(True)
+        self.area_estadisticas.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {COLORES['superficie_clara']};
+                color: {COLORES['texto']};
+                border: 2px solid {COLORES['borde']};
+                border-radius: 10px;
+                padding: 15px;
+                font-size: 13px;
+                font-family: 'Courier New';
+                line-height: 1.8;
+            }}
+        """)
+        self.area_estadisticas.setText("Presiona 'Actualizar Estadísticas' para calcular las métricas del grafo.")
+        layout_stats.addWidget(self.area_estadisticas)
+        
+        widget_stats.setLayout(layout_stats)
+        self.tab_widget.addTab(widget_stats, "Estadísticas")
+    
+    def actualizar_estadisticas(self):
+        """Calcula y muestra las estadísticas del grafo"""
+        try:
+            stats = calcular_estadisticas(self.grafo)
+            
+            resultado = f"""
+ESTADÍSTICAS DEL GRAFO
+{'='*50}
+
+USUARIOS:
+  Total de usuarios: {stats.cantidad_usuarios}
+  Total de amistades: {stats.cantidad_amistades}
+
+USUARIO CON MÁS AMIGOS:
+  Usuario: {stats.usuario_con_mas_amigos if stats.usuario_con_mas_amigos else 'N/A'}
+  Cantidad de amigos: {stats.max_amigos}
+
+USUARIO CON MENOS AMIGOS:
+  Usuario: {stats.usuario_con_menos_amigos if stats.usuario_con_menos_amigos else 'N/A'}
+  Cantidad de amigos: {stats.min_amigos}
+
+PROMEDIO:
+  Promedio de amigos por usuario: {stats.promedio_amigos:.2f}
+
+{'='*50}
+"""
+            self.area_estadisticas.setText(resultado)
+            self.log(f"Estadísticas actualizadas: {stats.cantidad_usuarios} usuarios, promedio {stats.promedio_amigos:.2f} amigos")
+        
+        except Exception as e:
+            self.area_estadisticas.setText(f"ERROR: {str(e)}")
+            self.log(f"Error al calcular estadísticas: {str(e)}")
 
 
 def main():

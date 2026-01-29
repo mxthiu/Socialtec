@@ -81,7 +81,6 @@ def guardar_usuarios(usuarios_dict: Dict) -> bool:
             archivo_temp.replace(ARCHIVO_USUARIOS)
             return True
         except Exception as e:
-            print(f"Error guardando usuarios: {e}")
             return False
 
 

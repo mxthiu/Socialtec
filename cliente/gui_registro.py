@@ -127,7 +127,7 @@ class VentanaRegistro(QMainWindow):
                 font-size: 40px;
             }}
         """)
-        self.label_foto.setText("📷")
+        self.label_foto.setText("")
         
         # Botón para seleccionar foto
         btn_seleccionar = QPushButton("Seleccionar foto")

@@ -325,7 +325,7 @@ class ContenidoCambiarPassword(QWidget):
             return
         
         # Verificar código
-        from cliente.auth_client import obtener_email_usuario, cambiar_password_usuario as cambiar_password
+        from cliente.auth_client import obtener_email_usuario, cambiar_password_sin_validar
         from cliente.email_service import verificar_codigo
         
         email = obtener_email_usuario(self.usuario_data["usuario"])
@@ -339,8 +339,8 @@ class ContenidoCambiarPassword(QWidget):
             self.mostrar_mensaje(2, mensaje_verificacion, "error")
             return
         
-        # Cambiar contraseña
-        exito, mensaje = cambiar_password(self.usuario_data["usuario"], nueva)
+        # Cambiar contraseña (sin validar password actual porque se usa código de email)
+        exito, mensaje = cambiar_password_sin_validar(self.usuario_data["usuario"], nueva)
         
         if exito:
             self.mostrar_mensaje(2, "Contraseña cambiada exitosamente", "exito")
