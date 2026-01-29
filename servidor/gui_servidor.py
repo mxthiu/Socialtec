@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QFrame, QLabel, QTextEdit, QStatusBar, QApplication,
-    QTabWidget, QScrollArea
+    QTabWidget, QScrollArea, QLineEdit
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont, QPixmap
@@ -14,6 +14,7 @@ from cliente.estilos import *
 from servidor.servidor_tcp import ServidorTCP
 from grafo.grafo import Grafo
 from grafo.visualizacion import visualizar_grafo
+from grafo.algoritmos import encontrar_camino_bfs
 
 
 class ServidorThread(QThread):
@@ -133,7 +134,7 @@ class VentanaServidor(QMainWindow):
             }}
         """)
         self.area_logs.setText("Servidor apagado - Presiona 'Prender Server' para iniciar\n")
-        self.tab_widget.addTab(self.area_logs, "📋 Logs")
+        self.tab_widget.addTab(self.area_logs, "Logs")
         
         # Pestaña de Visualización del Grafo
         self.scroll_grafo = QScrollArea()
@@ -155,7 +156,10 @@ class VentanaServidor(QMainWindow):
         """)
         self.label_imagen_grafo.setText("Grafo vacío - No hay usuarios registrados aún")
         self.scroll_grafo.setWidget(self.label_imagen_grafo)
-        self.tab_widget.addTab(self.scroll_grafo, "🌐 Visualización Grafo")
+        self.tab_widget.addTab(self.scroll_grafo, " Visualización Grafo")
+        
+        # Pestaña de búsqueda de caminos
+        self._crear_tab_buscar_camino()
         
         # Status bar
         self.status_bar = self.statusBar()
@@ -291,6 +295,162 @@ class VentanaServidor(QMainWindow):
         # Scroll al final
         scrollbar = self.area_logs.verticalScrollBar()
         scrollbar.setValue(scrollbar.maximum())
+    
+    def _crear_tab_buscar_camino(self):
+        """Crea la pestaña para buscar caminos de amistad"""
+        widget_camino = QWidget()
+        layout_camino = QVBoxLayout()
+        layout_camino.setContentsMargins(20, 20, 20, 20)
+        layout_camino.setSpacing(15)
+        
+        # Título
+        titulo_camino = QLabel("Buscar Camino de Amistad")
+        titulo_camino.setStyleSheet(f"""
+            font-size: 16px;
+            font-weight: bold;
+            color: {COLORES['texto']};
+        """)
+        layout_camino.addWidget(titulo_camino)
+        
+        # Descripción
+        desc = QLabel("Busca si existe un path de amistad entre dos usuarios")
+        desc.setStyleSheet(f"color: {COLORES['texto_secundario']}; font-size: 12px;")
+        layout_camino.addWidget(desc)
+        
+        # Separador
+        sep = QFrame()
+        sep.setFixedHeight(1)
+        sep.setStyleSheet(f"background-color: {COLORES['borde']};")
+        layout_camino.addWidget(sep)
+        
+        # Layout de entrada
+        layout_entrada = QHBoxLayout()
+        layout_entrada.setSpacing(10)
+        
+        # Usuario inicial
+        layout_entrada.addWidget(QLabel("Desde:"))
+        self.input_usuario_inicio = QLineEdit()
+        self.input_usuario_inicio.setPlaceholderText("Ej: alice")
+        self.input_usuario_inicio.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {COLORES['superficie_clara']};
+                color: {COLORES['texto']};
+                border: 2px solid {COLORES['borde']};
+                border-radius: 5px;
+                padding: 8px;
+                font-size: 12px;
+            }}
+            QLineEdit:focus {{
+                border: 2px solid {COLORES['primario']};
+            }}
+        """)
+        layout_entrada.addWidget(self.input_usuario_inicio)
+        
+        # Usuario final
+        layout_entrada.addWidget(QLabel("Hasta:"))
+        self.input_usuario_fin = QLineEdit()
+        self.input_usuario_fin.setPlaceholderText("Ej: david")
+        self.input_usuario_fin.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {COLORES['superficie_clara']};
+                color: {COLORES['texto']};
+                border: 2px solid {COLORES['borde']};
+                border-radius: 5px;
+                padding: 8px;
+                font-size: 12px;
+            }}
+            QLineEdit:focus {{
+                border: 2px solid {COLORES['primario']};
+            }}
+        """)
+        layout_entrada.addWidget(self.input_usuario_fin)
+        
+        # Botón buscar
+        self.boton_buscar_camino = QPushButton("🔍 Buscar")
+        self.boton_buscar_camino.setStyleSheet(ESTILO_BOTON_PRIMARIO)
+        self.boton_buscar_camino.clicked.connect(self.buscar_camino)
+        self.boton_buscar_camino.setFixedWidth(100)
+        layout_entrada.addWidget(self.boton_buscar_camino)
+        
+        layout_entrada.addStretch()
+        layout_camino.addLayout(layout_entrada)
+        
+        # Área de resultado
+        self.area_resultado_camino = QTextEdit()
+        self.area_resultado_camino.setReadOnly(True)
+        self.area_resultado_camino.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {COLORES['superficie_clara']};
+                color: {COLORES['texto']};
+                border: 2px solid {COLORES['borde']};
+                border-radius: 10px;
+                padding: 15px;
+                font-size: 13px;
+                font-family: 'Courier New';
+                line-height: 1.6;
+            }}
+        """)
+        self.area_resultado_camino.setText("Ingresa dos usuarios y presiona 'Buscar' para encontrar si existe un camino de amistad entre ellos.")
+        layout_camino.addWidget(self.area_resultado_camino)
+        
+        widget_camino.setLayout(layout_camino)
+        self.tab_widget.addTab(widget_camino, " Buscar Camino")
+    
+    def buscar_camino(self):
+        """Busca un camino entre dos usuarios"""
+        inicio = self.input_usuario_inicio.text().strip()
+        fin = self.input_usuario_fin.text().strip()
+        
+        if not inicio or not fin:
+            self.area_resultado_camino.setText("❌ ERROR: Debes ingresar ambos usuarios")
+            return
+        
+        if inicio == fin:
+            self.area_resultado_camino.setText(f"⚠️ ADVERTENCIA: Los usuarios son los mismos ({inicio})")
+            return
+        
+        try:
+            # Buscar camino
+            camino = encontrar_camino_bfs(self.grafo, inicio, fin)
+            
+            if camino:
+                # Camino encontrado
+                saltos = len(camino) - 1
+                resultado = f"""✅ CAMINO ENCONTRADO
+
+Desde: {inicio}
+Hasta: {fin}
+Saltos: {saltos}
+Camino: {' → '.join(camino)}
+
+Detalle del camino:
+"""
+                for i, usuario in enumerate(camino, 1):
+                    if i == 1:
+                        resultado += f"\n  {i}. {usuario} (inicio)"
+                    elif i == len(camino):
+                        resultado += f"\n  {i}. {usuario} (fin)"
+                    else:
+                        resultado += f"\n  {i}. {usuario} (amigo intermedio)"
+                
+                self.area_resultado_camino.setText(resultado)
+                self.log(f"✅ Camino encontrado: {inicio} → {fin} ({saltos} saltos)")
+            else:
+                # No existe camino
+                resultado = f"""❌ NO EXISTE CAMINO
+
+Desde: {inicio}
+Hasta: {fin}
+
+No se encontró un camino de amistad entre estos usuarios.
+Esto significa que no están conectados a través de amigos comunes.
+"""
+                self.area_resultado_camino.setText(resultado)
+                self.log(f"❌ No existe camino entre {inicio} y {fin}")
+        
+        except Exception as e:
+            self.area_resultado_camino.setText(f"⚠️ ERROR: {str(e)}")
+            self.log(f"❌ Error al buscar camino: {str(e)}")
 
 
 def main():
