@@ -55,5 +55,14 @@
     "email": "picadoj994@gmail.com",
     "foto": null,
     "amigos": []
+  },
+  "testuser_61223232": {
+    "usuario": "testuser_61223232",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$GCNEyNm7V4oRIuSc855Tig$F5iLCBIqeNnvq1wLveFUbbVYR5RYW3U+ZuYAP+NIpA8",
+    "nombre": "Test",
+    "apellido": "User",
+    "email": "test@example.com",
+    "foto": "",
+    "amigos": []
   }
 }
